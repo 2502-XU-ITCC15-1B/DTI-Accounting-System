@@ -47,17 +47,57 @@ function App() {
 
   // ✅ Wrapped with container
   return (
-    <div className="container">
-      <h1>DTI Accounting System</h1>
-      <p>Welcome, {currentUser?.username}!</p>
-      <p>{message}</p>
-      {dbTime && <p>Database time: {dbTime}</p>}
+  <div className="app-layout">
+      {/* LEFT SIDE */}
+      <div className="main">
+        <div className="header">
+          <div className="logo">Logo</div>
+          <h1 className="title">Dashboard</h1>
+        </div>
 
-      <button onClick={handleLogout} style={{ marginTop: "1rem" }}>
-        Logout
-      </button>
+        <div className="modules">
+          {[1, 2, 3, 4, 5, 6].map((num) => (
+            <div key={num} className="module-card">
+              <div className="icon">📄</div>
+              <p>Module {num}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="status">
+          <p>{message}</p>
+          {dbTime && <p>Database time: {dbTime}</p>}
+        </div>
+      </div>
+
+      {/* RIGHT SIDEBAR */}
+      <div className="sidebar">
+        <input className="search" placeholder="Search..." />
+
+        <div className="section">
+          <h4>Section Heading</h4>
+          <ul>
+            <li>Title</li>
+            <li>Title</li>
+            <li>Title</li>
+          </ul>
+        </div>
+
+        <div className="section">
+          <h4>Section Heading</h4>
+          <ul>
+            <li>Title</li>
+            <li>Title</li>
+          </ul>
+        </div>
+
+        <button className="logout" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
     </div>
   );
 }
+
 
 export default App;
