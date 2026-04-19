@@ -120,6 +120,10 @@ function App() {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
+const isAdmin = currentUser?.role === "admin";
+// OR if using boolean:
+// const isAdmin = currentUser?.isAdmin === true;
+
   return (
     <div className="app-layout">
       <div className="main">
@@ -128,14 +132,24 @@ function App() {
           <h1 className="title">Dashboard</h1>
         </div>
 
-        <div className="modules">
-          {[1, 2, 3, 4, 5, 6].map((num) => (
-            <div key={num} className="module-card">
-              <div className="icon">📄</div>
-              <p>Module {num}</p>
-            </div>
-          ))}
+    <div className="modules">
+      {[
+        ...(isAdmin ? ["admin"] : []),
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ].map((item) => (
+        <div key={item} className="module-card">
+          <div className="icon">📄</div>
+          <p>
+            {item === "admin" ? "Admin" : `Module ${item}`}
+          </p>
         </div>
+      ))}
+    </div>
 
         <div className="status">
           <p>{message}</p>

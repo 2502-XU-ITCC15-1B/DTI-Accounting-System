@@ -32,6 +32,7 @@ export const loginUser = async (req, res) => {
       {
         id: user._id,
         username: user.username,
+        role: user.role,
       },
       process.env.JWT_SECRET,
       { expiresIn: "30m" }
@@ -43,6 +44,7 @@ export const loginUser = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -59,12 +61,12 @@ export const getCurrentUser = async (req, res) => {
       user: {
         id: req.user.id,
         username: req.user.username,
+        role: req.user.role,
       },
     });
   } catch (error) {
-  console.error("LOGIN ERROR:", error);
-  return res.status(500).json({
-    message: error.message || "Server error",
-  });
-}
-}
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
+  }
+};
