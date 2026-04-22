@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import Login from "./pages/Login";
+import Login from "./pages/login"; // capitalize variable
+import FarmerManagement from "./pages/farmerManagement"; // capitalize variable
 import { authFetch } from "./utils/authFetch";
 import "./index.css";
 
@@ -10,6 +11,7 @@ function App() {
   const [dbTime, setDbTime] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [selectedModule, setSelectedModule] = useState(null);
 
   const timeoutRef = useRef(null);
 
@@ -19,6 +21,7 @@ function App() {
     localStorage.removeItem("lastActivity");
     setIsLoggedIn(false);
     setCurrentUser(null);
+    setSelectedModule(null);
   };
 
   const resetInactivityTimer = () => {
@@ -64,7 +67,7 @@ function App() {
                 clearSession();
               }, remainingTime);
             }
-          } catch (error) {
+          } catch {
             clearSession();
           }
         }
@@ -116,13 +119,68 @@ function App() {
     clearSession();
   };
 
+  // ✅ FIXED: use capitalized component
   if (!isLoggedIn) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
-const isAdmin = currentUser?.role === "admin";
-// OR if using boolean:
-// const isAdmin = currentUser?.isAdmin === true;
+  const isAdmin = currentUser?.role === "admin";
+
+  const modules = [
+    ...(isAdmin ? ["admin"] : []),
+    "farmers",
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+  ];
+
+  const renderMainContent = () => {
+    // ✅ FIXED: matches import name
+    if (selectedModule === "farmers") {
+      return <FarmerManagement />;
+    }
+
+    if (selectedModule === "admin") {
+      return <h2>Admin Module</h2>;
+    }
+
+    if (typeof selectedModule === "number") {
+      return <h2>{`Module ${selectedModule}`}</h2>;
+    }
+
+    return (
+      <>
+        <div className="modules">
+          {modules.map((item) => (
+            <div
+              key={item}
+              className="module-card"
+              onClick={() => setSelectedModule(item)}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="icon">📄</div>
+              <p>
+                {item === "admin"
+                  ? "Admin"
+                  : item === "farmers"
+                  ? "Farmer Management"
+                  : `Module ${item}`}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="status">
+          <p>{message}</p>
+          {dbTime && <p>Database time: {dbTime}</p>}
+          {currentUser && <p>Logged in as: {currentUser.username}</p>}
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="app-layout">
@@ -132,30 +190,20 @@ const isAdmin = currentUser?.role === "admin";
           <h1 className="title">Dashboard</h1>
         </div>
 
-    <div className="modules">
-      {[
-        ...(isAdmin ? ["admin"] : []),
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ].map((item) => (
-        <div key={item} className="module-card">
-          <div className="icon">📄</div>
-          <p>
-            {item === "admin" ? "Admin" : `Module ${item}`}
-          </p>
-        </div>
-      ))}
-    </div>
+        {selectedModule && (
+          <button
+            onClick={() => setSelectedModule(null)}
+            style={{
+              marginBottom: "16px",
+              padding: "8px 12px",
+              cursor: "pointer",
+            }}
+          >
+            Back to Dashboard
+          </button>
+        )}
 
-        <div className="status">
-          <p>{message}</p>
-          {dbTime && <p>Database time: {dbTime}</p>}
-          {currentUser && <p>Logged in as: {currentUser.username}</p>}
-        </div>
+        {renderMainContent()}
       </div>
 
       <div className="sidebar">
