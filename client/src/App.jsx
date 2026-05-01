@@ -134,13 +134,7 @@ const isAdmin = currentUser?.role === "admin";
 
     <div className="modules">
       {[
-        ...(isAdmin ? ["admin"] : []),
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
+        ...(isAdmin ? ["admin"] : [])
       ].map((item) => (
         <div key={item} className="module-card">
           <div className="icon">📄</div>
