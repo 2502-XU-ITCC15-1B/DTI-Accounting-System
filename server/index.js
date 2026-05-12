@@ -28,7 +28,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/* Test route */
 app.get("/api", (req, res) => {
   res.json({
     message: "Backend connected successfully",
@@ -37,8 +36,8 @@ app.get("/api", (req, res) => {
 });
 
 /* Routes */
-app.use("/auth", authRoutes);
-app.use("/users", userRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/beans", beanRoutes);
 app.use("/api/farmers", farmerRoutes);
 app.use("/api/deliveries", deliveryRoutes);
