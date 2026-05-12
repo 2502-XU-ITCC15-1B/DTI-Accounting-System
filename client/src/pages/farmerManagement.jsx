@@ -133,6 +133,16 @@ function FarmerManagement() {
 
     if (!form.name.trim()) {
       newErrors.name = "Full name required";
+    } else {
+      const wordCount = form.name
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length;
+
+      if (wordCount < 3) {
+        newErrors.name =
+          "Include first name, middle name, and surname. Use N/A if no middle name.";
+      }
     }
 
     if (!form.sex.trim()) {
@@ -144,7 +154,8 @@ function FarmerManagement() {
     }
 
     if (!form.residentialAddress.trim()) {
-      newErrors.residentialAddress = "Residential address required";
+      newErrors.residentialAddress =
+        "Residential address required";
     }
 
     if (!form.farmAddress.trim()) {
@@ -154,7 +165,8 @@ function FarmerManagement() {
     if (!form.contactNumber.trim()) {
       newErrors.contactNumber = "Contact number required";
     } else if (!/^\d{11}$/.test(form.contactNumber)) {
-      newErrors.contactNumber = "Contact number must be exactly 11 digits";
+      newErrors.contactNumber =
+        "Contact number must be exactly 11 digits";
     }
 
     if (!form.emailAddress.trim()) {
@@ -166,21 +178,20 @@ function FarmerManagement() {
     }
 
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    const valid = validateForm();
 
-    const cleanedBeans = [
-      ...new Set(
-        form.beans
-          .map((b) => String(b).trim())
-          .filter((b) => isMongoId(b))
-      ),
-    ];
+    if (!valid) return;
+
+    const cleanedBeans = form.beans
+      .map((b) => String(b).trim())
+      .filter((b) => isMongoId(b));
 
     const payload = {
       farmerID: form.farmerID,
@@ -196,9 +207,17 @@ function FarmerManagement() {
 
     try {
       if (isEditing) {
-        await axios.put(`${API}/api/farmers/${form.id}`, payload, authHeaders);
+        await axios.put(
+          `${API}/api/farmers/${form.id}`,
+          payload,
+          authHeaders
+        );
       } else {
-        await axios.post(`${API}/api/farmers`, payload, authHeaders);
+        await axios.post(
+          `${API}/api/farmers`,
+          payload,
+          authHeaders
+        );
       }
 
       await fetchData();
@@ -209,7 +228,6 @@ function FarmerManagement() {
     }
   };
 
-  // ✅ FIXED EDIT HANDLER
   const handleEdit = (f) => {
     setForm({
       id: f.id,
@@ -221,11 +239,10 @@ function FarmerManagement() {
       farmAddress: f.farmAddress || "",
       contactNumber: f.contactNumber || "",
       emailAddress: f.emailAddress || "",
-      beans: f.beans?.length
-        ? f.beans.map((b) =>
-            typeof b === "string" ? b : b._id
-          )
-        : [""],
+      beans:
+        f.beans?.length
+          ? f.beans.map((b) => b._id || "")
+          : [""],
     });
 
     setErrors({});
@@ -236,8 +253,14 @@ function FarmerManagement() {
     if (!confirm("Delete farmer?")) return;
 
     try {
-      await axios.delete(`${API}/api/farmers/${id}`, authHeaders);
-      setFarmers((prev) => prev.filter((f) => f.id !== id));
+      await axios.delete(
+        `${API}/api/farmers/${id}`,
+        authHeaders
+      );
+
+      setFarmers((prev) =>
+        prev.filter((f) => f.id !== id)
+      );
     } catch (err) {
       console.error(err);
       alert("Delete failed");
@@ -260,40 +283,171 @@ function FarmerManagement() {
     <div style={{ padding: "20px" }}>
       <h2>Farmer Management</h2>
 
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: "14px", maxWidth: "700px" }}>
-        <input name="farmerID" placeholder="Farmer ID" value={form.farmerID} onChange={handleChange} />
-        {errors.farmerID && <div style={bubbleStyle}>{errors.farmerID}</div>}
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: "grid",
+          gap: "14px",
+          maxWidth: "700px",
+        }}
+      >
+        <div>
+          <input
+            name="farmerID"
+            placeholder="Farmer ID"
+            value={form.farmerID}
+            onChange={handleChange}
+          />
 
-        <input name="name" placeholder="Full Name" value={form.name} onChange={handleChange} />
-        {errors.name && <div style={bubbleStyle}>{errors.name}</div>}
+          {errors.farmerID && (
+            <div style={bubbleStyle}>
+              {errors.farmerID}
+            </div>
+          )}
+        </div>
 
-        <select name="sex" value={form.sex} onChange={handleChange}>
-          <option value="">Select Sex</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
-        {errors.sex && <div style={bubbleStyle}>{errors.sex}</div>}
+        <div>
+          <input
+            name="name"
+            placeholder="Full Name"
+            value={form.name}
+            onChange={handleChange}
+          />
 
-        <input name="age" type="number" placeholder="Age" value={form.age} onChange={handleChange} />
-        {errors.age && <div style={bubbleStyle}>{errors.age}</div>}
+          {errors.name && (
+            <div style={bubbleStyle}>
+              {errors.name}
+            </div>
+          )}
+        </div>
 
-        <input name="residentialAddress" placeholder="Residential Address" value={form.residentialAddress} onChange={handleChange} />
-        <input name="farmAddress" placeholder="Farm Address" value={form.farmAddress} onChange={handleChange} />
-        <input name="contactNumber" placeholder="11-digit Contact Number" value={form.contactNumber} maxLength={11}
-          onChange={(e) => {
-            const numbersOnly = e.target.value.replace(/\D/g, "");
-            setForm((prev) => ({ ...prev, contactNumber: numbersOnly }));
-          }}
-        />
-        <input name="emailAddress" placeholder="Email" value={form.emailAddress} onChange={handleChange} />
+        <div>
+          <select
+            name="sex"
+            value={form.sex}
+            onChange={handleChange}
+          >
+            <option value="">Select Sex</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+
+          {errors.sex && (
+            <div style={bubbleStyle}>
+              {errors.sex}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <input
+            name="age"
+            type="number"
+            placeholder="Age"
+            value={form.age}
+            onChange={handleChange}
+          />
+
+          {errors.age && (
+            <div style={bubbleStyle}>
+              {errors.age}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <input
+            name="residentialAddress"
+            placeholder="Residential Address"
+            value={form.residentialAddress}
+            onChange={handleChange}
+          />
+
+          {errors.residentialAddress && (
+            <div style={bubbleStyle}>
+              {errors.residentialAddress}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <input
+            name="farmAddress"
+            placeholder="Farm Address"
+            value={form.farmAddress}
+            onChange={handleChange}
+          />
+
+          {errors.farmAddress && (
+            <div style={bubbleStyle}>
+              {errors.farmAddress}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <input
+            name="contactNumber"
+            placeholder="11-digit Contact Number"
+            value={form.contactNumber}
+            maxLength={11}
+            onChange={(e) => {
+              const numbersOnly = e.target.value.replace(/\D/g, "");
+
+              setForm((prev) => ({
+                ...prev,
+                contactNumber: numbersOnly,
+              }));
+
+              setErrors((prev) => ({
+                ...prev,
+                contactNumber: "",
+              }));
+            }}
+          />
+
+          {errors.contactNumber && (
+            <div style={bubbleStyle}>
+              {errors.contactNumber}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <input
+            name="emailAddress"
+            placeholder="Email"
+            value={form.emailAddress}
+            onChange={handleChange}
+          />
+
+          {errors.emailAddress && (
+            <div style={bubbleStyle}>
+              {errors.emailAddress}
+            </div>
+          )}
+        </div>
 
         <div>
           <p>Beans</p>
 
           {form.beans.map((bean, i) => (
-            <div key={i} style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-              <select value={bean} onChange={(e) => handleBeanChange(i, e.target.value)}>
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                gap: "10px",
+                marginBottom: "10px",
+              }}
+            >
+              <select
+                value={bean}
+                onChange={(e) =>
+                  handleBeanChange(i, e.target.value)
+                }
+              >
                 <option value="">Select bean</option>
+
                 {beans.map((b) => (
                   <option key={b._id} value={b._id}>
                     {b.beanName}
@@ -301,26 +455,52 @@ function FarmerManagement() {
                 ))}
               </select>
 
-              <button type="button" onClick={addBeanField}>+</button>
+              <button type="button" onClick={addBeanField}>
+                +
+              </button>
 
               {form.beans.length > 1 && (
-                <button type="button" onClick={() => removeBeanField(i)}>-</button>
+                <button
+                  type="button"
+                  onClick={() => removeBeanField(i)}
+                >
+                  -
+                </button>
               )}
             </div>
           ))}
 
-          {errors.beans && <div style={bubbleStyle}>{errors.beans}</div>}
+          {errors.beans && (
+            <div style={bubbleStyle}>
+              {errors.beans}
+            </div>
+          )}
         </div>
 
-        <button type="submit">{isEditing ? "Update" : "Add"}</button>
+        <button type="submit">
+          {isEditing ? "Update" : "Add"}
+        </button>
       </form>
 
-      <table border="1" style={{ marginTop: "20px", width: "100%" }}>
+      <table
+        border="1"
+        style={{
+          marginTop: "20px",
+          width: "100%",
+        }}
+      >
         <thead>
           <tr>
-            <th>ID</th><th>Name</th><th>Sex</th><th>Age</th>
-            <th>Residential Address</th><th>Farm Address</th>
-            <th>Contact</th><th>Email</th><th>Beans</th><th>Actions</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Sex</th>
+            <th>Age</th>
+            <th>Residential Address</th>
+            <th>Farm Address</th>
+            <th>Contact</th>
+            <th>Email</th>
+            <th>Beans</th>
+            <th>Actions</th>
           </tr>
         </thead>
 
@@ -335,10 +515,19 @@ function FarmerManagement() {
               <td>{f.farmAddress}</td>
               <td>{f.contactNumber}</td>
               <td>{f.emailAddress}</td>
-              <td>{f.beans?.map((b) => b.beanName).join(", ")}</td>
+
               <td>
-                <button onClick={() => handleEdit(f)}>Edit</button>
-                <button onClick={() => handleDelete(f.id)}>Delete</button>
+                {f.beans?.map((b) => b.beanName).join(", ")}
+              </td>
+
+              <td>
+                <button onClick={() => handleEdit(f)}>
+                  Edit
+                </button>
+
+                <button onClick={() => handleDelete(f.id)}>
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
