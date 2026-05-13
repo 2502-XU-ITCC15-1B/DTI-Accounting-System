@@ -1,12 +1,17 @@
 import Payment from "../models/payment.js";
 import Transaction from "../models/transaction.js";
-import mongoose from "mongoose";
 
 export const addPayment = async (req, res) => {
   try {
     console.log("PAYMENT BODY RECEIVED:", req.body);
 
-    const { deliveryId, amountPaid, paymentMethod, notes } = req.body;
+    const {
+      localId,
+      deliveryId,
+      amountPaid,
+      paymentMethod,
+      notes,
+    } = req.body;
 
     if (!deliveryId) {
       return res.status(400).json({
@@ -20,19 +25,7 @@ export const addPayment = async (req, res) => {
       });
     }
 
-    let transaction = null;
-
-    // Try Mongo ObjectId lookup first
-    if (mongoose.Types.ObjectId.isValid(deliveryId)) {
-      transaction = await Transaction.findById(deliveryId);
-    }
-
-    // Fallback to localId lookup
-    if (!transaction) {
-      transaction = await Transaction.findOne({
-        localId: deliveryId,
-      });
-    }
+    const transaction = await Transaction.findById(deliveryId);
 
     if (!transaction) {
       return res.status(404).json({
@@ -40,13 +33,31 @@ export const addPayment = async (req, res) => {
       });
     }
 
-    const payment = await Payment.create({
-      deliveryId: transaction._id,
+    const paymentData = {
+      localId: localId || null,
+      deliveryId,
       farmerName: transaction.farmerName,
       amountPaid: Number(amountPaid),
       paymentMethod: paymentMethod || "Cash",
       notes: notes || "",
-    });
+    };
+
+    let payment;
+
+    if (localId) {
+      payment = await Payment.findOneAndUpdate(
+        { localId },
+        paymentData,
+        {
+          new: true,
+          upsert: true,
+          runValidators: true,
+          setDefaultsOnInsert: true,
+        }
+      );
+    } else {
+      payment = await Payment.create(paymentData);
+    }
 
     console.log("PAYMENT SAVED:", payment);
 
@@ -65,25 +76,8 @@ export const addPayment = async (req, res) => {
 
 export const getPaymentsByDelivery = async (req, res) => {
   try {
-    let transactionId = req.params.deliveryId;
-
-    // Support localId lookup too
-    if (!mongoose.Types.ObjectId.isValid(transactionId)) {
-      const transaction = await Transaction.findOne({
-        localId: transactionId,
-      });
-
-      if (!transaction) {
-        return res.status(404).json({
-          message: "Transaction not found",
-        });
-      }
-
-      transactionId = transaction._id;
-    }
-
     const payments = await Payment.find({
-      deliveryId: transactionId,
+      deliveryId: req.params.deliveryId,
     }).sort({ createdAt: -1 });
 
     res.json({
