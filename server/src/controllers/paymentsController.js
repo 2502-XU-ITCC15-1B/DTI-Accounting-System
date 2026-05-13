@@ -5,13 +5,7 @@ export const addPayment = async (req, res) => {
   try {
     console.log("PAYMENT BODY RECEIVED:", req.body);
 
-    const {
-      localId,
-      deliveryId,
-      amountPaid,
-      paymentMethod,
-      notes,
-    } = req.body;
+    const { localId, deliveryId, amountPaid, paymentMethod, notes } = req.body;
 
     if (!deliveryId) {
       return res.status(400).json({
@@ -61,14 +55,35 @@ export const addPayment = async (req, res) => {
 
     console.log("PAYMENT SAVED:", payment);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: payment,
     });
   } catch (err) {
     console.error("ADD PAYMENT ERROR:", err);
 
-    res.status(500).json({
+    return res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+// GET ALL PAYMENTS — needed by Electron pull sync: GET /api/payments
+export const getPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find()
+      .populate("deliveryId")
+      .sort({ createdAt: -1 });
+
+    return res.json({
+      success: true,
+      count: payments.length,
+      data: payments,
+    });
+  } catch (err) {
+    console.error("GET ALL PAYMENTS ERROR:", err);
+
+    return res.status(500).json({
       message: err.message,
     });
   }
@@ -80,14 +95,14 @@ export const getPaymentsByDelivery = async (req, res) => {
       deliveryId: req.params.deliveryId,
     }).sort({ createdAt: -1 });
 
-    res.json({
+    return res.json({
       success: true,
       data: payments,
     });
   } catch (err) {
     console.error("GET PAYMENTS ERROR:", err);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: err.message,
     });
   }
