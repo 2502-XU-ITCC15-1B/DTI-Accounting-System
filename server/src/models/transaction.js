@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const transactionSchema = new mongoose.Schema(
   {
+    localId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+
     farmerName: {
       type: String,
       required: true,
@@ -39,9 +45,11 @@ const transactionSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Transaction", transactionSchema);
+export default mongoose.models.Transaction ||
+  mongoose.model("Transaction", transactionSchema);

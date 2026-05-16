@@ -95,98 +95,42 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Create User Button Color */
-.admin-card .admin-btn {
-  background-color: #0F9D6C !important;
-  color: white !important;
-  border: none !important;
-  transition: all 0.3s ease !important;
+.password-field {
+  position: relative;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
-.admin-card .admin-btn:hover {
-  background-color: #0c8256 !important;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(15, 157, 108, 0.3) !important;
+.password-field input {
+  width: 100%;
+  padding-right: 70px; /* space for button */
 }
 
-.admin-card .admin-btn:active {
-  transform: translateY(0) !important;
+.eye-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
 }
 
+.eye-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
 
-/* Admin Panel - White Background for All Input Fields */
-.admin-card input,
-.admin-card select,
-.admin-card textarea {
-  background-color: #ffffff !important;
-  color: #111827 !important;
-  border: 1px solid #d1d5db !important;
-  border-radius: 8px !important;
-  padding: 10px 12px !important;
-  font-size: 14px !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  transition: all 0.3s ease !important;
-}
-
-/* Focus State */
-.admin-card input:focus,
-.admin-card select:focus,
-.admin-card textarea:focus {
-  background-color: #ffffff !important;
-  border-color: #0F9D6C !important;
-  box-shadow: 0 0 0 3px rgba(15, 157, 108, 0.1) !important;
-  outline: none !important;
-}
-
-/* Hover State */
-.admin-card input:hover,
-.admin-card select:hover,
-.admin-card textarea:hover {
-  border-color: #0F9D6C !important;
-  background-color: #f9fafb !important;
-}
-
-/* Placeholder Text Color */
-.admin-card input::placeholder,
-.admin-card textarea::placeholder {
-  color: #9ca3af !important;
-  opacity: 1 !important;
-}
-
-/* Disabled Input Fields */
-.admin-card input:disabled,
-.admin-card select:disabled,
-.admin-card textarea:disabled {
-  background-color: #f3f4f6 !important;
-  color: #6b7280 !important;
-  cursor: not-allowed !important;
-}
-
-/* Dropdown Options Styling */
-.admin-card select option {
-  background-color: #ffffff !important;
-  color: #111827 !important;
-}
-
-/* Dark Mode Override - Force White Background */
-@media (prefers-color-scheme: dark) {
-  .admin-card input,
-  .admin-card select,
-  .admin-card textarea {
-    background-color: #ffffff !important;
-    color: #111827 !important;
-    border-color: #d1d5db !important;
-  }
-  
-  .admin-card select option {
-    background-color: #ffffff !important;
-    color: #111827 !important;
-  }
-  
-  .admin-card input:focus,
-  .admin-card select:focus,
-  .admin-card textarea:focus {
-    background-color: #ffffff !important;
-  }
+  line-height: 1;     
+  padding: 0;           
 }

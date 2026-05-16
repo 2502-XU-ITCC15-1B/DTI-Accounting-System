@@ -64,6 +64,17 @@ function DeliveryEntry() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    if (name === "deliveryGuyContact" || name === "consigneeContact") {
+      const numbersOnly = value.replace(/\D/g, "").slice(0, 11);
+
+      setForm((prev) => ({
+        ...prev,
+        [name]: numbersOnly,
+      }));
+
+      return;
+    }
+
     if (name === "farmer") {
       const selectedFarmer = farmers.find((f) => f.name === value);
 
@@ -86,7 +97,9 @@ function DeliveryEntry() {
     }));
   };
 
-  const selectedBean = beans.find((b) => b.beanName === form.beanType || b.name === form.beanType);
+  const selectedBean = beans.find(
+    (b) => b.beanName === form.beanType || b.name === form.beanType
+  );
 
   const pricePerUnit = Number(selectedBean?.pricePerUnit || selectedBean?.price || 0);
   const volume = Number(form.volume || 0);
@@ -108,8 +121,12 @@ function DeliveryEntry() {
     if (!form.date) return "Please select a date.";
     if (!form.deliveryGuy) return "Please enter delivery guy.";
     if (!form.deliveryGuyContact) return "Please enter delivery guy contact.";
+    if (form.deliveryGuyContact.length !== 11)
+      return "Delivery guy contact must be exactly 11 digits.";
     if (!form.consignee) return "Please enter consignee.";
     if (!form.consigneeContact) return "Please enter consignee contact.";
+    if (form.consigneeContact.length !== 11)
+      return "Consignee contact must be exactly 11 digits.";
     return null;
   };
 
@@ -181,9 +198,6 @@ function DeliveryEntry() {
   return (
     <div className="delivery-container">
       <div className="delivery-header">
-        <span className="back-icon" onClick={() => setShowForm(false)}>
-          ←
-        </span>
         <h2>Delivery Entry</h2>
       </div>
 
@@ -283,7 +297,15 @@ function DeliveryEntry() {
 
           <div className="form-group">
             <label>Delivery Guy Contact No.</label>
-            <input name="deliveryGuyContact" value={form.deliveryGuyContact} onChange={handleChange} />
+            <input
+              type="text"
+              name="deliveryGuyContact"
+              value={form.deliveryGuyContact}
+              onChange={handleChange}
+              maxLength={11}
+              inputMode="numeric"
+              placeholder="09XXXXXXXXX"
+            />
           </div>
 
           <div className="form-group">
@@ -293,7 +315,15 @@ function DeliveryEntry() {
 
           <div className="form-group">
             <label>Consignee Contact No.</label>
-            <input name="consigneeContact" value={form.consigneeContact} onChange={handleChange} />
+            <input
+              type="text"
+              name="consigneeContact"
+              value={form.consigneeContact}
+              onChange={handleChange}
+              maxLength={11}
+              inputMode="numeric"
+              placeholder="09XXXXXXXXX"
+            />
           </div>
 
           <div className="form-group">
