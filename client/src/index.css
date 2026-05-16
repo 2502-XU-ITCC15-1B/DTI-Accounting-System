@@ -424,3 +424,178 @@ tr:nth-child(even) {
   width: 100%;
   word-break: break-word;
 }
+
+/* ===== COLLAPSIBLE SIDEBAR STYLES ===== */
+
+/* Profile toggle button */
+.profile-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 40px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46a0 100%);
+}
+
+.toggle-icon {
+  font-size: 18px;
+}
+
+.toggle-text {
+  font-size: 14px;
+}
+
+/* Collapsible Sidebar - Hidden by default */
+.collapsible-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  background: var(--bg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1000;
+  overflow-y: auto;  /* CHANGE THIS - allows scrolling if content is too tall */
+}
+
+.collapsible-sidebar.open {
+  transform: translateX(0);
+}
+
+/* Sidebar close button */
+.sidebar-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  z-index: 1001;
+}
+
+.sidebar-close-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+/* Overlay when sidebar is open (optional - adds dark background behind sidebar) */
+.collapsible-sidebar.open::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: -1;
+}
+
+/* Profile card styling inside collapsible sidebar */
+.collapsible-sidebar .profile-card {
+  text-align: center;
+  padding: 32px 16px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.collapsible-sidebar .avatar {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.collapsible-sidebar h3 {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+}
+
+.collapsible-sidebar .role {
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.collapsible-sidebar .meta {
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 12px 0;
+  padding: 8px 0;
+}
+
+.collapsible-sidebar .logout {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  width: 100%;
+  transition: all 0.2s ease;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.collapsible-sidebar .logout:hover {
+  background: #b91c1c;
+  transform: translateY(-2px);
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .collapsible-sidebar {
+    width: 280px;
+  }
+  
+  .profile-toggle-btn .toggle-text {
+    display: inline; /* Keep text visible on mobile */
+  }
+  
+  .profile-toggle-btn {
+    padding: 8px 14px;
+  }
+}
+
+/* Optional: Add animation for the toggle button click */
+.profile-toggle-btn:active {
+  transform: scale(0.96);
+}
+
+/* Header right section - aligns title and profile button */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Optional: Adjust the title margin */
+.header-right .title {
+  margin: 0;
+}
