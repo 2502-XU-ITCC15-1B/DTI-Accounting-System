@@ -6,8 +6,9 @@ function AdminPage() {
   const [users, setUsers] = useState([]);
   const [showPasswords, setShowPasswords] = useState(false);
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [editUser, setEditUser] = useState(null);
+
+  const [modal, setModal] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -26,6 +27,9 @@ function AdminPage() {
     return <h1>Unauthorized</h1>;
   }
 
+  // =========================
+  // FETCH USERS
+  // =========================
   const fetchUsers = async () => {
     try {
       const res = await authFetch(`${import.meta.env.VITE_API_URL}/users`);
@@ -46,6 +50,9 @@ function AdminPage() {
     fetchUsers();
   }, []);
 
+  // =========================
+  // CREATE USER
+  // =========================
   const createUser = async () => {
     try {
       if (!form.name || !form.username || !form.password) {
@@ -60,9 +67,7 @@ function AdminPage() {
 
       const res = await authFetch(`${import.meta.env.VITE_API_URL}/users`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name,
           username: form.username,
@@ -92,40 +97,104 @@ function AdminPage() {
         role: "user",
       });
 
-      setShowPassword(false);
-      setShowConfirmPassword(false);
-
       fetchUsers();
     } catch (err) {
       console.error("CREATE USER ERROR:", err);
-      alert("Failed to create user");
     }
   };
 
-  const deleteUser = async (id) => {
+  // =========================
+  // DELETE USER (ADMIN PASSWORD)
+  // =========================
+  const deleteUser = (id) => {
+    setModal({
+      type: "confirm",
+      action: "delete",
+      user: { _id: id },
+      password: "",
+    });
+  };
+
+  // =========================
+  // EDIT USER
+  // =========================
+  const openEdit = (user) => {
+    setEditUser({ ...user });
+  };
+
+  const submitEdit = () => {
+    setModal({
+      type: "confirm",
+      action: "edit",
+      user: editUser,
+      password: "",
+    });
+  };
+
+  // =========================
+  // CONFIRM ACTION
+  // =========================
+  const handleConfirm = async () => {
     try {
-      const confirmDelete = window.confirm("Delete this user?");
-      if (!confirmDelete) return;
+      if (!modal) return;
 
-      const res = await authFetch(
-        `${import.meta.env.VITE_API_URL}/users/${id}`,
-        { method: "DELETE" }
-      );
+      // DELETE
+      if (modal.action === "delete") {
+        const res = await authFetch(
+          `${import.meta.env.VITE_API_URL}/users/${modal.user._id}`,
+          {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              adminPassword: modal.password,
+            }),
+          }
+        );
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || data.error || "Failed to delete user");
-        return;
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Delete failed");
       }
 
+      // EDIT
+      if (modal.action === "edit") {
+        const res = await authFetch(
+          `${import.meta.env.VITE_API_URL}/users/${modal.user._id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+            name: modal.user.name,
+            username: modal.user.username,
+            sex: modal.user.sex,
+            age: modal.user.age,
+            position: modal.user.position,
+            role: modal.user.role,
+
+            // ✅ ONLY SEND IF USER ENTERED ONE
+            ...(modal.user.password
+              ? { password: modal.user.password }
+              : {}),
+
+            adminPassword: modal.password,
+          }),
+          }
+        );
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Update failed");
+      }
+
+      setModal(null);
+      setEditUser(null);
       fetchUsers();
     } catch (err) {
-      console.error("DELETE USER ERROR:", err);
-      alert("Failed to delete user");
+      console.error("CONFIRM ERROR:", err);
     }
   };
 
+  // =========================
+  // UI
+  // =========================
   return (
     <div className="admin-container">
       <h1>Admin Panel</h1>
@@ -146,43 +215,46 @@ function AdminPage() {
           onChange={(e) => setForm({ ...form, username: e.target.value })}
         />
 
-        {/* PASSWORD */}
         <div className="password-field">
           <input
-            type={showPassword ? "text" : "password"}
+            type={form.showPassword ? "text" : "password"}
             placeholder="Password"
             value={form.password}
-            onChange={(e) =>
-              setForm({ ...form, password: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
+
           <button
             type="button"
             className="eye-btn"
-            onClick={() => setShowPassword(!showPassword)}
+            onClick={() =>
+              setForm({ ...form, showPassword: !form.showPassword })
+            }
           >
-            {showPassword ? "Hide" : "Show"}
+            {form.showPassword ? "Hide" : "Show"}
           </button>
         </div>
 
-        {/* CONFIRM PASSWORD */}
         <div className="password-field">
           <input
-            type={showConfirmPassword ? "text" : "password"}
+            type={form.showConfirmPassword ? "text" : "password"}
             placeholder="Confirm Password"
             value={form.confirmPassword}
             onChange={(e) =>
               setForm({ ...form, confirmPassword: e.target.value })
             }
           />
+
           <button
             type="button"
             className="eye-btn"
             onClick={() =>
-              setShowConfirmPassword(!showConfirmPassword)
+              setForm({
+                ...form,
+                showConfirmPassword: !form.showConfirmPassword,
+              })
             }
           >
-            {showConfirmPassword ? "Hide" : "Show"}
+            {form.showConfirmPassword ? "Hide" : "Show"}
           </button>
         </div>
 
@@ -225,15 +297,6 @@ function AdminPage() {
       <div className="admin-card">
         <h3>User List</h3>
 
-        <button
-          className="admin-btn"
-          onClick={() => setShowPasswords(!showPasswords)}
-        >
-          {showPasswords
-            ? "Hide Hashed Passwords"
-            : "Show Hashed Passwords"}
-        </button>
-
         <div className="user-list">
           {users.map((u) => (
             <div key={u._id} className="user-item">
@@ -245,25 +308,144 @@ function AdminPage() {
                   <br />
                   Sex: {u.sex || "N/A"} • Age: {u.age || "N/A"} • Position:{" "}
                   {u.position || "N/A"}
-                  {showPasswords && (
-                    <>
-                      <br />
-                      Hashed Password: {u.password || "Hidden / Not returned"}
-                    </>
-                  )}
                 </small>
               </span>
 
-              <button
-                className="delete-btn"
-                onClick={() => deleteUser(u._id)}
-              >
-                Delete
-              </button>
+              <div>
+                <button onClick={() => openEdit(u)}>Edit</button>
+                <button
+                  className="delete-btn"
+                  onClick={() => deleteUser(u._id)}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* EDIT MODAL */}
+      {editUser && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <h3>Edit User</h3>
+
+            <input
+              value={editUser.name}
+              onChange={(e) =>
+                setEditUser({ ...editUser, name: e.target.value })
+              }
+            />
+
+            <input
+              value={editUser.username}
+              onChange={(e) =>
+                setEditUser({ ...editUser, username: e.target.value })
+              }
+            />
+
+            <div className="password-field">
+              <input
+                type={editUser.showPassword ? "text" : "password"}
+                placeholder="New Password"
+                value={editUser.password || ""}
+                onChange={(e) =>
+                  setEditUser({ ...editUser, password: e.target.value })
+                }
+              />
+
+              <button
+                type="button"
+                className="eye-btn"
+                onClick={() =>
+                  setEditUser({
+                    ...editUser,
+                    showPassword: !editUser.showPassword,
+                  })
+                }
+              >
+                {editUser.showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+
+            <div className="password-field">
+              <input
+                type={editUser.showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm Password"
+                value={editUser.confirmPassword || ""}
+                onChange={(e) =>
+                  setEditUser({
+                    ...editUser,
+                    confirmPassword: e.target.value,
+                  })
+                }
+              />
+
+              <button
+                type="button"
+                className="eye-btn"
+                onClick={() =>
+                  setEditUser({
+                    ...editUser,
+                    showConfirmPassword: !editUser.showConfirmPassword,
+                  })
+                }
+              >
+                {editUser.showConfirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+
+            <input
+              placeholder="Sex"
+              value={editUser.sex || ""}
+              onChange={(e) =>
+                setEditUser({ ...editUser, sex: e.target.value })
+              }
+            />
+
+            <input
+              type="number"
+              placeholder="Age"
+              value={editUser.age || ""}
+              onChange={(e) =>
+                setEditUser({ ...editUser, age: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Position"
+              value={editUser.position || ""}
+              onChange={(e) =>
+                setEditUser({ ...editUser, position: e.target.value })
+              }
+            />
+
+            <button onClick={submitEdit}>Save</button>
+            <button onClick={() => setEditUser(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN CONFIRM MODAL */}
+      {modal && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <p>Enter admin password</p>
+
+            <input
+              type="password"
+              value={modal.password}
+              onChange={(e) =>
+                setModal({ ...modal, password: e.target.value })
+              }
+            />
+
+            <button onClick={handleConfirm}>Confirm</button>
+            <button onClick={() => setModal(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

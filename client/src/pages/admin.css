@@ -82,41 +82,15 @@
   background: #c23616;
 }
 
-/* Admin Page Specific Background */
-.admin-container {
-  background-color: #ECFDF5 !important;
-  min-height: 100vh;
-  padding: 20px;
-}
-
-.admin-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.password-field {
-  position: relative;
+.password-field input {
   width: 100%;
-  margin-bottom: 12px;
+  padding-right: 70px;
+  margin-bottom: 0; /* IMPORTANT FIX */
 }
 
 .password-field input {
   width: 100%;
   padding-right: 70px; /* space for button */
-}
-
-.eye-btn {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  color: #555;
 }
 
 .eye-btn {
@@ -130,7 +104,10 @@
   font-size: 12px;
   font-weight: 600;
   color: #666;
+  padding: 0;
+  line-height: 1;
+}
 
-  line-height: 1;     
-  padding: 0;           
+.eye-btn:hover {
+  color: #000;
 }
