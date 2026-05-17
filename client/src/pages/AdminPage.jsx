@@ -4,11 +4,20 @@ import "./admin.css";
 
 function AdminPage() {
   const [users, setUsers] = useState([]);
-  const [showPasswords, setShowPasswords] = useState(false);
 
-  const [editUser, setEditUser] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [modal, setModal] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminPasswordError, setAdminPasswordError] = useState("");
+
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [deleteAdminPassword, setDeleteAdminPassword] = useState("");
+  const [deletePasswordError, setDeletePasswordError] = useState("");
+
+  const [formError, setFormError] = useState("");
+  const [systemError, setSystemError] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -27,22 +36,22 @@ function AdminPage() {
     return <h1>Unauthorized</h1>;
   }
 
-  // =========================
-  // FETCH USERS
-  // =========================
   const fetchUsers = async () => {
     try {
+      setSystemError("");
+
       const res = await authFetch(`${import.meta.env.VITE_API_URL}/users`);
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Failed to fetch users");
+        setSystemError(data.message || "Failed to fetch users.");
         return;
       }
 
       setUsers(data.users || []);
     } catch (err) {
       console.error("FETCH USERS ERROR:", err);
+      setSystemError("Failed to load users.");
     }
   };
 
@@ -50,24 +59,76 @@ function AdminPage() {
     fetchUsers();
   }, []);
 
-  // =========================
-  // CREATE USER
-  // =========================
+  const verifyAdminPassword = async (passwordToCheck) => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: currentUser.username,
+          password: passwordToCheck,
+        }),
+      });
+
+      const data = await res.json();
+
+      return res.ok && data.success;
+    } catch (err) {
+      console.error("VERIFY ADMIN PASSWORD ERROR:", err);
+      return false;
+    }
+  };
+
+  const resetForm = () => {
+    setForm({
+      name: "",
+      username: "",
+      password: "",
+      confirmPassword: "",
+      sex: "",
+      age: "",
+      position: "",
+      role: "user",
+    });
+
+    setEditingUser(null);
+    setAdminPassword("");
+    setAdminPasswordError("");
+    setFormError("");
+    setSystemError("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  const resetDeleteConfirmation = () => {
+    setPendingDeleteId(null);
+    setDeleteAdminPassword("");
+    setDeletePasswordError("");
+    setSystemError("");
+  };
+
   const createUser = async () => {
     try {
+      setFormError("");
+      setSystemError("");
+
       if (!form.name || !form.username || !form.password) {
-        alert("Full name, username, and password are required");
+        setFormError("Full name, username, and password are required.");
         return;
       }
 
       if (form.password !== form.confirmPassword) {
-        alert("Passwords do not match");
+        setFormError("Passwords do not match.");
         return;
       }
 
       const res = await authFetch(`${import.meta.env.VITE_API_URL}/users`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: form.name,
           username: form.username,
@@ -82,179 +143,224 @@ function AdminPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || data.error || "Failed to create user");
+        setSystemError(data.message || data.error || "Failed to create user.");
         return;
       }
 
-      setForm({
-        name: "",
-        username: "",
-        password: "",
-        confirmPassword: "",
-        sex: "",
-        age: "",
-        position: "",
-        role: "user",
-      });
-
+      resetForm();
       fetchUsers();
     } catch (err) {
       console.error("CREATE USER ERROR:", err);
+      setSystemError("Failed to create user.");
     }
   };
 
-  // =========================
-  // DELETE USER (ADMIN PASSWORD)
-  // =========================
-  const deleteUser = (id) => {
-    setModal({
-      type: "confirm",
-      action: "delete",
-      user: { _id: id },
+  const startEdit = (user) => {
+    setEditingUser(user);
+    setPendingDeleteId(null);
+    setDeleteAdminPassword("");
+    setDeletePasswordError("");
+    setFormError("");
+    setSystemError("");
+
+    setForm({
+      name: user.name || "",
+      username: user.username || "",
       password: "",
+      confirmPassword: "",
+      sex: user.sex || "",
+      age: user.age || "",
+      position: user.position || "",
+      role: user.role || "user",
     });
+
+    setAdminPassword("");
+    setAdminPasswordError("");
   };
 
-  // =========================
-  // EDIT USER
-  // =========================
-  const openEdit = (user) => {
-    setEditUser({ ...user });
-  };
-
-  const submitEdit = () => {
-    setModal({
-      type: "confirm",
-      action: "edit",
-      user: editUser,
-      password: "",
-    });
-  };
-
-  // =========================
-  // CONFIRM ACTION
-  // =========================
-  const handleConfirm = async () => {
+  const updateUser = async () => {
     try {
-      if (!modal) return;
+      if (!editingUser) return;
 
-      // DELETE
-      if (modal.action === "delete") {
-        const res = await authFetch(
-          `${import.meta.env.VITE_API_URL}/users/${modal.user._id}`,
-          {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              adminPassword: modal.password,
-            }),
-          }
-        );
+      setFormError("");
+      setSystemError("");
+      setAdminPasswordError("");
 
-        const data = await res.json();
-        if (!res.ok) return alert(data.message || "Delete failed");
+      if (!form.name || !form.username) {
+        setFormError("Full name and username are required.");
+        return;
       }
 
-      // EDIT
-      if (modal.action === "edit") {
-        const res = await authFetch(
-          `${import.meta.env.VITE_API_URL}/users/${modal.user._id}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-            name: modal.user.name,
-            username: modal.user.username,
-            sex: modal.user.sex,
-            age: modal.user.age,
-            position: modal.user.position,
-            role: modal.user.role,
-
-            // ✅ ONLY SEND IF USER ENTERED ONE
-            ...(modal.user.password
-              ? { password: modal.user.password }
-              : {}),
-
-            adminPassword: modal.password,
-          }),
-          }
-        );
-
-        const data = await res.json();
-        if (!res.ok) return alert(data.message || "Update failed");
+      if (form.password || form.confirmPassword) {
+        if (form.password !== form.confirmPassword) {
+          setFormError("Passwords do not match.");
+          return;
+        }
       }
 
-      setModal(null);
-      setEditUser(null);
+      if (!adminPassword) {
+        setAdminPasswordError("Enter your admin password to confirm changes.");
+        return;
+      }
+
+      const isAdminPasswordValid = await verifyAdminPassword(adminPassword);
+
+      if (!isAdminPasswordValid) {
+        setAdminPasswordError("Incorrect admin password.");
+        return;
+      }
+
+      const body = {
+        name: form.name,
+        username: form.username,
+        sex: form.sex,
+        age: form.age ? Number(form.age) : null,
+        position: form.position,
+        role: form.role,
+      };
+
+      if (form.password) {
+        body.password = form.password;
+      }
+
+      const res = await authFetch(
+        `${import.meta.env.VITE_API_URL}/users/${editingUser._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSystemError(data.message || data.error || "Failed to update user.");
+        return;
+      }
+
+      resetForm();
       fetchUsers();
     } catch (err) {
-      console.error("CONFIRM ERROR:", err);
+      console.error("UPDATE USER ERROR:", err);
+      setSystemError("Failed to update user.");
     }
   };
 
-  // =========================
-  // UI
-  // =========================
+  const askDeleteUser = (id) => {
+    setPendingDeleteId(id);
+    setDeleteAdminPassword("");
+    setDeletePasswordError("");
+    setSystemError("");
+    setEditingUser(null);
+  };
+
+  const confirmDeleteUser = async () => {
+    try {
+      setDeletePasswordError("");
+      setSystemError("");
+
+      if (!deleteAdminPassword) {
+        setDeletePasswordError("Enter your admin password to confirm deletion.");
+        return;
+      }
+
+      const isAdminPasswordValid = await verifyAdminPassword(deleteAdminPassword);
+
+      if (!isAdminPasswordValid) {
+        setDeletePasswordError("Incorrect admin password.");
+        return;
+      }
+
+      const res = await authFetch(
+        `${import.meta.env.VITE_API_URL}/users/${pendingDeleteId}`,
+        { method: "DELETE" }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSystemError(data.message || data.error || "Failed to delete user.");
+        return;
+      }
+
+      resetDeleteConfirmation();
+      fetchUsers();
+    } catch (err) {
+      console.error("DELETE USER ERROR:", err);
+      setSystemError("Failed to delete user.");
+    }
+  };
+
   return (
     <div className="admin-container">
       <h1>Admin Panel</h1>
 
-      {/* CREATE USER */}
       <div className="admin-card">
-        <h3>Create User</h3>
+        <h3>{editingUser ? "Edit User" : "Create User"}</h3>
+
+        {formError && <div className="warning-bubble">{formError}</div>}
+        {systemError && <div className="warning-bubble">{systemError}</div>}
 
         <input
           placeholder="Full Name"
           value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          onChange={(e) => {
+            setForm({ ...form, name: e.target.value });
+            setFormError("");
+          }}
         />
 
         <input
           placeholder="Username"
           value={form.username}
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
+          onChange={(e) => {
+            setForm({ ...form, username: e.target.value });
+            setFormError("");
+          }}
         />
 
         <div className="password-field">
           <input
-            type={form.showPassword ? "text" : "password"}
-            placeholder="Password"
+            type={showPassword ? "text" : "password"}
+            placeholder={
+              editingUser
+                ? "New Password (leave blank to keep old password)"
+                : "Password"
+            }
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            onChange={(e) => {
+              setForm({ ...form, password: e.target.value });
+              setFormError("");
+            }}
           />
-
           <button
             type="button"
             className="eye-btn"
-            onClick={() =>
-              setForm({ ...form, showPassword: !form.showPassword })
-            }
+            onClick={() => setShowPassword(!showPassword)}
           >
-            {form.showPassword ? "Hide" : "Show"}
+            {showPassword ? "Hide" : "Show"}
           </button>
         </div>
 
         <div className="password-field">
           <input
-            type={form.showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm Password"
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder={editingUser ? "Confirm New Password" : "Confirm Password"}
             value={form.confirmPassword}
-            onChange={(e) =>
-              setForm({ ...form, confirmPassword: e.target.value })
-            }
+            onChange={(e) => {
+              setForm({ ...form, confirmPassword: e.target.value });
+              setFormError("");
+            }}
           />
-
           <button
             type="button"
             className="eye-btn"
-            onClick={() =>
-              setForm({
-                ...form,
-                showConfirmPassword: !form.showConfirmPassword,
-              })
-            }
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
           >
-            {form.showConfirmPassword ? "Hide" : "Show"}
+            {showConfirmPassword ? "Hide" : "Show"}
           </button>
         </div>
 
@@ -288,12 +394,71 @@ function AdminPage() {
           <option value="admin">Admin</option>
         </select>
 
-        <button className="admin-btn" onClick={createUser}>
-          Create User
-        </button>
+        {editingUser && (
+          <>
+            <input
+              type="password"
+              placeholder="Enter admin password to confirm edit"
+              value={adminPassword}
+              onChange={(e) => {
+                setAdminPassword(e.target.value);
+                setAdminPasswordError("");
+              }}
+            />
+
+            {adminPasswordError && (
+              <div className="warning-bubble">{adminPasswordError}</div>
+            )}
+          </>
+        )}
+
+        {editingUser ? (
+          <div className="admin-actions">
+            <button className="admin-btn" onClick={updateUser}>
+              Save Changes
+            </button>
+            <button className="cancel-btn" onClick={resetForm}>
+              Cancel Edit
+            </button>
+          </div>
+        ) : (
+          <button className="admin-btn" onClick={createUser}>
+            Create User
+          </button>
+        )}
       </div>
 
-      {/* USER LIST */}
+      {pendingDeleteId && (
+        <div className="admin-card">
+          <h3>Confirm Delete</h3>
+
+          <p>Enter admin password to delete this user.</p>
+
+          <input
+            type="password"
+            placeholder="Admin password"
+            value={deleteAdminPassword}
+            onChange={(e) => {
+              setDeleteAdminPassword(e.target.value);
+              setDeletePasswordError("");
+            }}
+          />
+
+          {deletePasswordError && (
+            <div className="warning-bubble">{deletePasswordError}</div>
+          )}
+
+          <div className="admin-actions">
+            <button className="delete-btn" onClick={confirmDeleteUser}>
+              Confirm Delete
+            </button>
+            <button className="cancel-btn" onClick={resetDeleteConfirmation}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="admin-card">
         <h3>User List</h3>
 
@@ -311,12 +476,11 @@ function AdminPage() {
                 </small>
               </span>
 
-              <div>
-                <button onClick={() => openEdit(u)}>Edit</button>
-                <button
-                  className="delete-btn"
-                  onClick={() => deleteUser(u._id)}
-                >
+              <div className="user-actions">
+                <button className="edit-btn" onClick={() => startEdit(u)}>
+                  Edit
+                </button>
+                <button className="delete-btn" onClick={() => askDeleteUser(u._id)}>
                   Delete
                 </button>
               </div>
@@ -324,128 +488,6 @@ function AdminPage() {
           ))}
         </div>
       </div>
-
-      {/* EDIT MODAL */}
-      {editUser && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3>Edit User</h3>
-
-            <input
-              value={editUser.name}
-              onChange={(e) =>
-                setEditUser({ ...editUser, name: e.target.value })
-              }
-            />
-
-            <input
-              value={editUser.username}
-              onChange={(e) =>
-                setEditUser({ ...editUser, username: e.target.value })
-              }
-            />
-
-            <div className="password-field">
-              <input
-                type={editUser.showPassword ? "text" : "password"}
-                placeholder="New Password"
-                value={editUser.password || ""}
-                onChange={(e) =>
-                  setEditUser({ ...editUser, password: e.target.value })
-                }
-              />
-
-              <button
-                type="button"
-                className="eye-btn"
-                onClick={() =>
-                  setEditUser({
-                    ...editUser,
-                    showPassword: !editUser.showPassword,
-                  })
-                }
-              >
-                {editUser.showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-
-            <div className="password-field">
-              <input
-                type={editUser.showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm Password"
-                value={editUser.confirmPassword || ""}
-                onChange={(e) =>
-                  setEditUser({
-                    ...editUser,
-                    confirmPassword: e.target.value,
-                  })
-                }
-              />
-
-              <button
-                type="button"
-                className="eye-btn"
-                onClick={() =>
-                  setEditUser({
-                    ...editUser,
-                    showConfirmPassword: !editUser.showConfirmPassword,
-                  })
-                }
-              >
-                {editUser.showConfirmPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-
-            <input
-              placeholder="Sex"
-              value={editUser.sex || ""}
-              onChange={(e) =>
-                setEditUser({ ...editUser, sex: e.target.value })
-              }
-            />
-
-            <input
-              type="number"
-              placeholder="Age"
-              value={editUser.age || ""}
-              onChange={(e) =>
-                setEditUser({ ...editUser, age: e.target.value })
-              }
-            />
-
-            <input
-              placeholder="Position"
-              value={editUser.position || ""}
-              onChange={(e) =>
-                setEditUser({ ...editUser, position: e.target.value })
-              }
-            />
-
-            <button onClick={submitEdit}>Save</button>
-            <button onClick={() => setEditUser(null)}>Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {/* ADMIN CONFIRM MODAL */}
-      {modal && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <p>Enter admin password</p>
-
-            <input
-              type="password"
-              value={modal.password}
-              onChange={(e) =>
-                setModal({ ...modal, password: e.target.value })
-              }
-            />
-
-            <button onClick={handleConfirm}>Confirm</button>
-            <button onClick={() => setModal(null)}>Cancel</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
