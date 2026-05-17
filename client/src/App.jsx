@@ -269,7 +269,15 @@ function App() {
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               aria-label="Toggle Profile Menu"
             >
-              <span className="toggle-icon">👤</span>
+              <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 12c2.76 0 5-2.24 5-5S14.76 2 12 2 7 4.24 7 7s2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/>
+            </svg>
               <span className="toggle-text">Profile</span>
             </button>
           </div>
@@ -299,7 +307,15 @@ function App() {
         </button>
 
         <div className="profile-card">
-          <div className="avatar">👤</div>
+          <svg className="user-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M12 12c2.76 0 5-2.24 5-5S14.76 2 12 2 7 4.24 7 7s2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/>
+        </svg>
 
           <h3>{currentUser?.name || currentUser?.username}</h3>
 
