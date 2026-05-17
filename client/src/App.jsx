@@ -19,10 +19,12 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedModule, setSelectedModule] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // NEW: sidebar state
 
   const [beans, setBeans] = useState([]);
 
   const timeoutRef = useRef(null);
+  const sidebarRef = useRef(null); // NEW: ref for sidebar
 
   const API = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
@@ -48,6 +50,7 @@ function App() {
     setIsLoggedIn(false);
     setCurrentUser(null);
     setSelectedModule(null);
+    setIsSidebarOpen(false); 
   };
 
   const resetInactivityTimer = () => {
@@ -59,6 +62,34 @@ function App() {
 
     timeoutRef.current = setTimeout(clearSession, SESSION_TIMEOUT);
   };
+
+    // NEW: Close sidebar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target) && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isSidebarOpen]);
+
+  // NEW: Close sidebar on ESC key
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === "Escape" && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscKey);
+    };
+  }, [isSidebarOpen]);
 
   useEffect(() => {
     const init = async () => {
@@ -220,7 +251,7 @@ function App() {
     <div className="app-layout">
       {/* MAIN */}
       <div className="main">
-        <div className="header">
+         <div className="header">
           <div className="logo-container">
             <img src={dtiLogo} className="main-logo" />
             <div>
@@ -231,7 +262,25 @@ function App() {
             </div>
           </div>
 
-          <h1 className="title">Dashboard</h1>
+          <div className="header-right">
+            <h1 className="title">Dashboard</h1>
+            <button 
+              className="profile-toggle-btn" 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              aria-label="Toggle Profile Menu"
+            >
+              <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 12c2.76 0 5-2.24 5-5S14.76 2 12 2 7 4.24 7 7s2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/>
+            </svg>
+              <span className="toggle-text">Profile</span>
+            </button>
+          </div>
         </div>
 
         {selectedModule && (
@@ -243,10 +292,30 @@ function App() {
         {renderMainContent()}
       </div>
 
-      {/* SIDEBAR (RESTORED FULLY) */}
-      <div className="sidebar">
+      {/* COLLAPSIBLE SIDEBAR - slides from right when open */}
+      <div 
+        ref={sidebarRef}
+        className={`collapsible-sidebar ${isSidebarOpen ? 'open' : ''}`}
+      >
+        {/* Overlay close button (X) */}
+        <button 
+          className="sidebar-close-btn" 
+          onClick={() => setIsSidebarOpen(false)}
+          aria-label="Close sidebar"
+        >
+          ✕
+        </button>
+
         <div className="profile-card">
-          <div className="avatar">👤</div>
+          <svg className="user-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M12 12c2.76 0 5-2.24 5-5S14.76 2 12 2 7 4.24 7 7s2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/>
+        </svg>
 
           <h3>{currentUser?.name || currentUser?.username}</h3>
 
