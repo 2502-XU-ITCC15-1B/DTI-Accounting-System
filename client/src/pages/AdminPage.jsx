@@ -61,44 +61,40 @@ function AdminPage() {
 
   // 🔥 REVISED VERIFY PASSWORD
   const verifyAdminPassword = async (passwordToCheck) => {
+  try {
+    const baseUrl = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "");
+
+    const res = await fetch(`${baseUrl}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: currentUser.username,
+        password: passwordToCheck,
+      }),
+    });
+
+    let data = {};
+
     try {
-      // remove trailing /api if present
-      const baseUrl = import.meta.env.VITE_API_URL.replace(
-        /\/api\/?$/,
-        ""
-      );
-
-      const res = await fetch(`${baseUrl}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: currentUser.username,
-          password: passwordToCheck,
-        }),
-      });
-
-      let data = {};
-
-      try {
-        data = await res.json();
-      } catch {
-        data = {};
-      }
-
-      console.log("VERIFY ADMIN PASSWORD:", {
-        status: res.status,
-        success: data?.success,
-        message: data?.message,
-      });
-
-      return res.ok && data.success;
-    } catch (err) {
-      console.error("VERIFY ADMIN PASSWORD ERROR:", err);
-      return false;
+      data = await res.json();
+    } catch {
+      data = {};
     }
-  };
+
+    console.log("VERIFY ADMIN PASSWORD:", {
+      status: res.status,
+      token: Boolean(data?.token),
+      message: data?.message,
+    });
+
+    return res.ok && (data?.token || data?.message === "Login successful");
+  } catch (err) {
+    console.error("VERIFY ADMIN PASSWORD ERROR:", err);
+    return false;
+  }
+};
 
   const resetForm = () => {
     setForm({
