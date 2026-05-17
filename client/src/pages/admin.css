@@ -30,6 +30,7 @@
   border: 1px solid #dcdde1;
   border-radius: 6px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .admin-card input:focus,
@@ -68,6 +69,28 @@
   border-radius: 6px;
 }
 
+/* ACTION GROUPS */
+.admin-actions,
+.user-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* EDIT BUTTON */
+.edit-btn {
+  background: #40739e;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.edit-btn:hover {
+  background: #273c75;
+}
+
 /* DELETE BUTTON */
 .delete-btn {
   background: #e84118;
@@ -82,17 +105,35 @@
   background: #c23616;
 }
 
+/* CANCEL BUTTON */
+.cancel-btn {
+  background: #718093;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: #57606f;
+}
+
+/* PASSWORD FIELD */
+.password-field {
+  position: relative;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
 .password-field input {
   width: 100%;
   padding-right: 70px;
-  margin-bottom: 0; /* IMPORTANT FIX */
+  margin-bottom: 0;
+  box-sizing: border-box;
 }
 
-.password-field input {
-  width: 100%;
-  padding-right: 70px; /* space for button */
-}
-
+/* INLINE SHOW BUTTON */
 .eye-btn {
   position: absolute;
   right: 10px;
@@ -110,4 +151,27 @@
 
 .eye-btn:hover {
   color: #000;
+}
+
+/* ERROR BUBBLE */
+.warning-bubble {
+  margin-top: 6px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  background: #ffe5e5;
+  color: #b00020;
+  border: 1px solid #ffb3b3;
+  border-radius: 8px;
+  font-size: 14px;
+  position: relative;
+}
+
+.warning-bubble::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 18px;
+  border-width: 0 7px 7px 7px;
+  border-style: solid;
+  border-color: transparent transparent #ffe5e5 transparent;
 }
