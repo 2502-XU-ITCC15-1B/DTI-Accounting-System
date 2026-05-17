@@ -10,6 +10,7 @@ function BeanManagement({ beans, setBeans }) {
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [errors, setErrors] = useState({});
 
   // 🔄 LOAD FROM BACKEND
   useEffect(() => {
@@ -57,8 +58,15 @@ function BeanManagement({ beans, setBeans }) {
     e.preventDefault();
 
     if (!form.name.trim() || !form.pricePerUnit || !form.unit.trim()) {
-      alert("Please fill in bean name, price per unit, and unit.");
-      return;
+      const newErrors = {};
+      if (!form.name.trim()) newErrors.name = "Bean name is required";
+      if (!form.pricePerUnit) newErrors.pricePerUnit = "Price is required";
+      if (!form.unit.trim()) newErrors.unit = "Unit is required";
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
     }
 
     const beanData = {
@@ -126,6 +134,17 @@ function BeanManagement({ beans, setBeans }) {
     }
   };
 
+    const bubbleStyle = {
+    background: "#fff4e5",
+    border: "1px solid #f5c26b",
+    color: "#8a5700",
+    padding: "6px 10px",
+    borderRadius: "12px",
+    fontSize: "12px",
+    marginTop: "4px",
+    display: "inline-block",
+  };
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>Bean Management</h2>
@@ -140,6 +159,7 @@ function BeanManagement({ beans, setBeans }) {
           maxWidth: "700px",
         }}
       >
+        <div>
         <input
           type="text"
           name="name"
@@ -147,7 +167,12 @@ function BeanManagement({ beans, setBeans }) {
           value={form.name}
           onChange={handleChange}
         />
+          {errors.name && (
+          <div style={bubbleStyle}>{errors.name}</div>
+          )}
+        </div>
 
+        <div>
         <input
           type="number"
           name="pricePerUnit"
@@ -155,7 +180,12 @@ function BeanManagement({ beans, setBeans }) {
           value={form.pricePerUnit}
           onChange={handleChange}
         />
+          {errors.pricePerUnit && (
+          <div style={bubbleStyle}>{errors.pricePerUnit}</div>
+          )}
+        </div>
 
+        <div>
         <input
           type="text"
           name="unit"
@@ -163,6 +193,10 @@ function BeanManagement({ beans, setBeans }) {
           value={form.unit}
           onChange={handleChange}
         />
+        {errors.unit && (
+        <div style={bubbleStyle}>{errors.unit}</div>
+        )}
+        </div>
 
         <div style={{ display: "flex", gap: "10px" }}>
           <button type="submit">
