@@ -65,3 +65,46 @@
 .login-card {
   background-color: #ffffff;
 }
+
+
+/* Login Button Color Change */
+.login-card button {
+  background-color: #0F9D6C !important;
+  color: white !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.login-card button:hover {
+  background-color: #0c8256 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 157, 108, 0.3);
+}
+
+.login-card button:active {
+  transform: translateY(0);
+}
+
+.login-card button:disabled {
+  background-color: #6c9e8a !important;
+  cursor: not-allowed;
+}
+
+/* Login Input Fields Background Color */
+.login-card input {
+  background-color: #ECFDF5 !important;
+  border: 1px solid #d1d5db !important;
+  color: #111827 !important;
+  transition: all 0.3s ease !important;
+}
+
+.login-card input:focus {
+  background-color: #ffffff !important;
+  border-color: #0F9D6C !important;
+  box-shadow: 0 0 0 3px rgba(15, 157, 108, 0.1) !important;
+  outline: none !important;
+}
+
+.login-card input:hover {
+  background-color: #e6f9f0 !important;
+}
