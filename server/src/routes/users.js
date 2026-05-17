@@ -159,6 +159,16 @@ router.put("/:id", protect, adminOnly, async (req, res) => {
 -------------------------- */
 router.delete("/:id", protect, adminOnly, async (req, res) => {
   try {
+    const { adminPassword } = req.body;
+
+    const admin = await User.findById(req.user.id);
+
+    const isMatch = await bcrypt.compare(adminPassword, admin.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Wrong admin password" });
+    }
+
     const deletedUser = await User.findByIdAndDelete(req.params.id);
 
     if (!deletedUser) {
@@ -168,6 +178,38 @@ router.delete("/:id", protect, adminOnly, async (req, res) => {
     res.json({
       success: true,
       message: "User deleted successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/*Update User*/
+router.put("/:id", protect, adminOnly, async (req, res) => {
+  try {
+    const { adminPassword, password, ...updateData } = req.body;
+
+    const admin = await User.findById(req.user.id);
+    const isMatch = await bcrypt.compare(adminPassword, admin.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Wrong admin password" });
+    }
+
+    // 🔥 HASH NEW PASSWORD IF PROVIDED
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { returnDocument: "after" }
+    ).select("-password");
+
+    res.json({
+      success: true,
+      user: updatedUser,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
