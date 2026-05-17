@@ -447,7 +447,7 @@ tr:nth-child(even) {
 .profile-toggle-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46a0 100%);
+  background: linear-gradient(135deg, #000000 0%, #82e4d7 100%);
 }
 
 .toggle-icon {
