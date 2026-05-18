@@ -18,6 +18,11 @@ function DeliveryEntry() {
   const [farmers, setFarmers] = useState([]);
   const [beans, setBeans] = useState([]);
   const [file, setFile] = useState(null);
+  const [errors, setErrors] = useState({});
+
+  const [deleteId, setDeleteId] = useState(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
 
   const getRecordedBy = () => {
     if (user?.name && user?.position) return `${user.name} (${user.position})`;
@@ -72,6 +77,11 @@ function DeliveryEntry() {
         [name]: numbersOnly,
       }));
 
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+
       return;
     }
 
@@ -88,12 +98,22 @@ function DeliveryEntry() {
           "",
       }));
 
+      setErrors((prev) => ({
+        ...prev,
+        farmer: "",
+      }));
+
       return;
     }
 
     setForm((prev) => ({
       ...prev,
       [name]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
     }));
   };
 
@@ -110,33 +130,56 @@ function DeliveryEntry() {
       ...emptyForm,
       recordedBy: getRecordedBy(),
     });
+
     setFile(null);
+    setErrors({});
   };
 
   const validateForm = () => {
-    if (!form.farmer) return "Please select a farmer.";
-    if (!form.beanType) return "Please select a bean type.";
-    if (!form.volume || Number(form.volume) <= 0) return "Please enter a valid volume.";
-    if (!form.courier) return "Please enter courier.";
-    if (!form.date) return "Please select a date.";
-    if (!form.deliveryGuy) return "Please enter delivery guy.";
-    if (!form.deliveryGuyContact) return "Please enter delivery guy contact.";
-    if (form.deliveryGuyContact.length !== 11)
-      return "Delivery guy contact must be exactly 11 digits.";
-    if (!form.consignee) return "Please enter consignee.";
-    if (!form.consigneeContact) return "Please enter consignee contact.";
-    if (form.consigneeContact.length !== 11)
-      return "Consignee contact must be exactly 11 digits.";
-    return null;
+    const newErrors = {};
+
+    if (!form.farmer) newErrors.farmer = "Select a farmer";
+    if (!form.beanType) newErrors.beanType = "Select a bean type";
+
+    if (!form.volume || Number(form.volume) <= 0) {
+      newErrors.volume = "Enter a valid volume";
+    }
+
+    if (!form.courier) newErrors.courier = "Courier is required";
+    if (!form.date) newErrors.date = "Pick a date";
+
+    if (!form.deliveryGuy) {
+      newErrors.deliveryGuy = "Delivery guy is required";
+    }
+
+    if (!form.deliveryGuyContact) {
+      newErrors.deliveryGuyContact = "Enter contact number";
+    } else if (form.deliveryGuyContact.length !== 11) {
+      newErrors.deliveryGuyContact = "Must be 11 digits";
+    }
+
+    if (!form.consignee) {
+      newErrors.consignee = "Consignee is required";
+    }
+
+    if (!form.consigneeContact) {
+      newErrors.consigneeContact = "Enter contact number";
+    } else if (form.consigneeContact.length !== 11) {
+      newErrors.consigneeContact = "Must be 11 digits";
+    }
+
+    return newErrors;
   };
 
   const handleSubmit = async () => {
-    const validationError = validateForm();
+    const validationErrors = validateForm();
 
-    if (validationError) {
-      alert(validationError);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
+
+    setErrors({});
 
     try {
       const data = new FormData();
@@ -176,22 +219,34 @@ function DeliveryEntry() {
     }
   };
 
-  const handleDelete = async (id) => {
-    const password = window.prompt("Enter admin password:");
-    if (!password) return;
+  const openDelete = (id) => {
+    setDeleteId(id);
+    setDeletePassword("");
+    setDeleteError("");
+  };
+
+  const confirmDelete = async () => {
+    if (!deletePassword) {
+      setDeleteError("Enter admin password");
+      return;
+    }
 
     try {
-      await axios.delete(`${API}/api/deliveries/${id}`, {
+      await axios.delete(`${API}/api/deliveries/${deleteId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        data: { password },
+        data: { password: deletePassword },
       });
 
-      setDeliveries((prev) => prev.filter((d) => d._id !== id));
+      setDeliveries((prev) => prev.filter((d) => d._id !== deleteId));
+
+      setDeleteId(null);
+      setDeletePassword("");
+      setDeleteError("");
     } catch (err) {
       console.error("DELETE ERROR:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Delete failed.");
+      setDeleteError(err.response?.data?.message || "Delete failed.");
     }
   };
 
@@ -218,14 +273,7 @@ function DeliveryEntry() {
                   {d.totalAmount ?? 0}
                 </span>
 
-                <button
-                  className="delete-btn"
-                  onClick={() => {
-                    if (window.confirm("Delete this delivery entry?")) {
-                      handleDelete(d._id);
-                    }
-                  }}
-                >
+                <button className="delete-btn" onClick={() => openDelete(d._id)}>
                   🗑 Delete
                 </button>
               </div>
@@ -234,11 +282,50 @@ function DeliveryEntry() {
         </>
       )}
 
+      {deleteId && (
+        <div className="modal">
+          <div className="modal-box">
+            <h3>Enter Admin Password</h3>
+
+            <input
+              type="password"
+              value={deletePassword}
+              className={deleteError ? "input-error" : ""}
+              onChange={(e) => {
+                setDeletePassword(e.target.value);
+                setDeleteError("");
+              }}
+            />
+
+            {deleteError && <span className="error-text">{deleteError}</span>}
+
+            <div className="modal-actions">
+              <button onClick={confirmDelete}>Confirm</button>
+
+              <button
+                onClick={() => {
+                  setDeleteId(null);
+                  setDeletePassword("");
+                  setDeleteError("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showForm && (
         <div className="form-grid">
           <div className="form-group">
             <label>Farmer</label>
-            <select name="farmer" onChange={handleChange} value={form.farmer}>
+            <select
+              name="farmer"
+              onChange={handleChange}
+              value={form.farmer}
+              className={errors.farmer ? "input-error" : ""}
+            >
               <option value="">Select farmer</option>
               {farmers.map((f) => (
                 <option key={f._id} value={f.name}>
@@ -246,6 +333,9 @@ function DeliveryEntry() {
                 </option>
               ))}
             </select>
+            {errors.farmer && (
+              <small className="error-bubble">{errors.farmer}</small>
+            )}
           </div>
 
           <div className="form-group">
@@ -255,7 +345,12 @@ function DeliveryEntry() {
 
           <div className="form-group">
             <label>Bean Type</label>
-            <select name="beanType" onChange={handleChange} value={form.beanType}>
+            <select
+              name="beanType"
+              onChange={handleChange}
+              value={form.beanType}
+              className={errors.beanType ? "input-error" : ""}
+            >
               <option value="">Select bean</option>
               {beans.map((b) => (
                 <option key={b._id} value={b.beanName || b.name}>
@@ -263,11 +358,23 @@ function DeliveryEntry() {
                 </option>
               ))}
             </select>
+            {errors.beanType && (
+              <small className="error-bubble">{errors.beanType}</small>
+            )}
           </div>
 
           <div className="form-group">
             <label>Volume</label>
-            <input type="number" name="volume" value={form.volume} onChange={handleChange} />
+            <input
+              type="number"
+              name="volume"
+              value={form.volume}
+              onChange={handleChange}
+              className={errors.volume ? "input-error" : ""}
+            />
+            {errors.volume && (
+              <small className="error-bubble">{errors.volume}</small>
+            )}
           </div>
 
           <div className="form-group">
@@ -282,17 +389,42 @@ function DeliveryEntry() {
 
           <div className="form-group">
             <label>Courier</label>
-            <input name="courier" value={form.courier} onChange={handleChange} />
+            <input
+              name="courier"
+              value={form.courier}
+              onChange={handleChange}
+              className={errors.courier ? "input-error" : ""}
+            />
+            {errors.courier && (
+              <small className="error-bubble">{errors.courier}</small>
+            )}
           </div>
 
           <div className="form-group">
             <label>Date</label>
-            <input type="date" name="date" value={form.date} onChange={handleChange} />
+            <input
+              type="date"
+              name="date"
+              value={form.date}
+              onChange={handleChange}
+              className={errors.date ? "input-error" : ""}
+            />
+            {errors.date && (
+              <small className="error-bubble">{errors.date}</small>
+            )}
           </div>
 
           <div className="form-group">
             <label>Delivery Guy</label>
-            <input name="deliveryGuy" value={form.deliveryGuy} onChange={handleChange} />
+            <input
+              name="deliveryGuy"
+              value={form.deliveryGuy}
+              onChange={handleChange}
+              className={errors.deliveryGuy ? "input-error" : ""}
+            />
+            {errors.deliveryGuy && (
+              <small className="error-bubble">{errors.deliveryGuy}</small>
+            )}
           </div>
 
           <div className="form-group">
@@ -305,12 +437,26 @@ function DeliveryEntry() {
               maxLength={11}
               inputMode="numeric"
               placeholder="09XXXXXXXXX"
+              className={errors.deliveryGuyContact ? "input-error" : ""}
             />
+            {errors.deliveryGuyContact && (
+              <small className="error-bubble">
+                {errors.deliveryGuyContact}
+              </small>
+            )}
           </div>
 
           <div className="form-group">
             <label>Consignee</label>
-            <input name="consignee" value={form.consignee} onChange={handleChange} />
+            <input
+              name="consignee"
+              value={form.consignee}
+              onChange={handleChange}
+              className={errors.consignee ? "input-error" : ""}
+            />
+            {errors.consignee && (
+              <small className="error-bubble">{errors.consignee}</small>
+            )}
           </div>
 
           <div className="form-group">
@@ -323,7 +469,13 @@ function DeliveryEntry() {
               maxLength={11}
               inputMode="numeric"
               placeholder="09XXXXXXXXX"
+              className={errors.consigneeContact ? "input-error" : ""}
             />
+            {errors.consigneeContact && (
+              <small className="error-bubble">
+                {errors.consigneeContact}
+              </small>
+            )}
           </div>
 
           <div className="form-group">

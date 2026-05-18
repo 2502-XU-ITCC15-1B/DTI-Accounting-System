@@ -175,3 +175,16 @@
   border-style: solid;
   border-color: transparent transparent #ffe5e5 transparent;
 }
+
+.warning-bubble,
+.error-bubble {
+  background: #fff4e5;
+  border: 1px solid #f5c26b;
+  color: #8a5700;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  display: inline-block;
+}

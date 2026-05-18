@@ -1,22 +1,33 @@
 import { useEffect, useState } from "react";
 import { authFetch } from "../utils/authFetch";
+import "./transactions.css";
 
 function TransactionHistory() {
   const [transactions, setTransactions] = useState([]);
   const [openId, setOpenId] = useState(null);
   const [details, setDetails] = useState({});
   const [amounts, setAmounts] = useState({});
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     fetchTransactions();
   }, []);
 
   const fetchTransactions = async () => {
-    const res = await authFetch(
-      `${import.meta.env.VITE_API_URL}/api/transactions`
-    );
-    const data = await res.json();
-    setTransactions(data.data || []);
+    try {
+      const res = await authFetch(
+        `${import.meta.env.VITE_API_URL}/api/transactions`
+      );
+
+      const data = await res.json();
+      setTransactions(data.data || []);
+    } catch (err) {
+      console.error("Error fetching transactions:", err);
+      setErrors((prev) => ({
+        ...prev,
+        global: "Failed to load transactions.",
+      }));
+    }
   };
 
   const fetchDetails = async (id) => {
@@ -24,6 +35,7 @@ function TransactionHistory() {
       const res = await authFetch(
         `${import.meta.env.VITE_API_URL}/api/transactions/${id}`
       );
+
       const data = await res.json();
 
       setDetails((prev) => ({
@@ -32,12 +44,21 @@ function TransactionHistory() {
       }));
     } catch (err) {
       console.error("Error fetching details:", err);
+      setErrors((prev) => ({
+        ...prev,
+        [id]: "Failed to load transaction details.",
+      }));
     }
   };
 
   const toggle = (id) => {
     const newId = openId === id ? null : id;
     setOpenId(newId);
+
+    setErrors((prev) => ({
+      ...prev,
+      [id]: "",
+    }));
 
     if (newId) fetchDetails(id);
   };
@@ -46,44 +67,78 @@ function TransactionHistory() {
     const amount = Number(amounts[id] || 0);
     const balance = Number(details[id]?.summary?.balance || 0);
 
-    // ✅ BLOCK INVALID INPUTS
-    if (amount <= 0) {
-      alert("Payment must be greater than 0");
-      return;
-    }
-
-    if (amount > balance) {
-      alert(`Payment exceeds remaining balance (₱${balance})`);
-      return;
-    }
-
-    await authFetch(`${import.meta.env.VITE_API_URL}/api/payments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        deliveryId: id,
-        amountPaid: amount,
-      }),
-    });
-
-    setAmounts((prev) => ({
+    setErrors((prev) => ({
       ...prev,
       [id]: "",
     }));
 
-    fetchDetails(id);
+    if (balance <= 0) {
+      setErrors((prev) => ({
+        ...prev,
+        [id]: "This transaction is already fully paid.",
+      }));
+      return;
+    }
+
+    if (amount <= 0) {
+      setErrors((prev) => ({
+        ...prev,
+        [id]: "Payment must be greater than 0.",
+      }));
+      return;
+    }
+
+    if (amount > balance) {
+      setErrors((prev) => ({
+        ...prev,
+        [id]: `Payment exceeds remaining balance of ₱${balance}.`,
+      }));
+      return;
+    }
+
+    try {
+      await authFetch(`${import.meta.env.VITE_API_URL}/api/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deliveryId: id,
+          amountPaid: amount,
+        }),
+      });
+
+      setAmounts((prev) => ({
+        ...prev,
+        [id]: "",
+      }));
+
+      await fetchDetails(id);
+    } catch (err) {
+      console.error("Error adding payment:", err);
+
+      setErrors((prev) => ({
+        ...prev,
+        [id]: "Failed to add payment.",
+      }));
+    }
   };
 
   return (
     <div style={{ padding: 20 }}>
       <h2>Transactions</h2>
 
+      {errors.global && (
+        <div className="warning-bubble">
+          ⚠️ {errors.global}
+        </div>
+      )}
+
       {transactions.map((t) => {
         const data = details[t._id];
         const summary = data?.summary;
         const payments = data?.payments;
 
-        const balance = summary?.balance || 0;
+        const balance = Number(summary?.balance || 0);
+        const isFullyPaid = summary && balance <= 0;
 
         return (
           <div
@@ -93,9 +148,9 @@ function TransactionHistory() {
               marginBottom: 10,
               padding: 10,
               borderRadius: 6,
+              background: "#fff",
             }}
           >
-            {/* HEADER */}
             <div
               onClick={() => toggle(t._id)}
               style={{
@@ -108,9 +163,14 @@ function TransactionHistory() {
               <span>₱{t.amount}</span>
             </div>
 
-            {/* DROPDOWN */}
             {openId === t._id && (
               <div style={{ marginTop: 10 }}>
+                {errors[t._id] && (
+                  <div className="warning-bubble">
+                    ⚠️ {errors[t._id]}
+                  </div>
+                )}
+
                 <p>Bean: {t.beanType}</p>
                 <p>Date: {new Date(t.date).toLocaleDateString()}</p>
 
@@ -121,7 +181,7 @@ function TransactionHistory() {
                     <p>Total: ₱{t.amount}</p>
                     <p>Paid: ₱{summary.totalPaid}</p>
                     <p>Balance: ₱{balance}</p>
-                    <p>Status: {summary.status}</p>
+                    <p>Status: {isFullyPaid ? "Fully Paid" : summary.status}</p>
                   </>
                 ) : (
                   <p>Loading summary...</p>
@@ -141,27 +201,48 @@ function TransactionHistory() {
 
                 <hr />
 
-                {/* PAYMENT INPUT */}
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder={`Enter payment (max ₱${balance})`}
-                  value={amounts[t._id] || ""}
-                  onChange={(e) =>
-                    setAmounts((prev) => ({
-                      ...prev,
-                      [t._id]: e.target.value,
-                    }))
-                  }
-                />
+                {isFullyPaid ? (
+                  <div
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: 10,
+                      background: "#dcfce7",
+                      color: "#166534",
+                      fontWeight: 600,
+                      width: "fit-content",
+                    }}
+                  >
+                    Fully Paid
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder={`Enter payment (max ₱${balance})`}
+                      value={amounts[t._id] || ""}
+                      onChange={(e) => {
+                        setAmounts((prev) => ({
+                          ...prev,
+                          [t._id]: e.target.value,
+                        }));
 
-                <button
-                  onClick={() => addPayment(t._id)}
-                  style={{ marginLeft: 10 }}
-                >
-                  Add Payment
-                </button>
+                        setErrors((prev) => ({
+                          ...prev,
+                          [t._id]: "",
+                        }));
+                      }}
+                    />
+
+                    <button
+                      onClick={() => addPayment(t._id)}
+                      style={{ marginLeft: 10 }}
+                    >
+                      Add Payment
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>

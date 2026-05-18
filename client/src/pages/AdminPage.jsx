@@ -19,6 +19,9 @@ function AdminPage() {
   const [formError, setFormError] = useState("");
   const [systemError, setSystemError] = useState("");
 
+  const [modal, setModal] = useState(null);
+  const [errors, setErrors] = useState({});
+
   const [form, setForm] = useState({
     name: "",
     username: "",
@@ -59,42 +62,42 @@ function AdminPage() {
     fetchUsers();
   }, []);
 
-  // 🔥 REVISED VERIFY PASSWORD
+  // VERIFY ADMIN PASSWORD
   const verifyAdminPassword = async (passwordToCheck) => {
-  try {
-    const baseUrl = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "");
-
-    const res = await fetch(`${baseUrl}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: currentUser.username,
-        password: passwordToCheck,
-      }),
-    });
-
-    let data = {};
-
     try {
-      data = await res.json();
-    } catch {
-      data = {};
+      const baseUrl = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "");
+
+      const res = await fetch(`${baseUrl}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: currentUser.username,
+          password: passwordToCheck,
+        }),
+      });
+
+      let data = {};
+
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
+
+      console.log("VERIFY ADMIN PASSWORD:", {
+        status: res.status,
+        token: Boolean(data?.token),
+        message: data?.message,
+      });
+
+      return res.ok && (data?.token || data?.message === "Login successful");
+    } catch (err) {
+      console.error("VERIFY ADMIN PASSWORD ERROR:", err);
+      return false;
     }
-
-    console.log("VERIFY ADMIN PASSWORD:", {
-      status: res.status,
-      token: Boolean(data?.token),
-      message: data?.message,
-    });
-
-    return res.ok && (data?.token || data?.message === "Login successful");
-  } catch (err) {
-    console.error("VERIFY ADMIN PASSWORD ERROR:", err);
-    return false;
-  }
-};
+  };
 
   const resetForm = () => {
     setForm({
@@ -113,6 +116,7 @@ function AdminPage() {
     setAdminPasswordError("");
     setFormError("");
     setSystemError("");
+    setErrors({});
     setShowPassword(false);
     setShowConfirmPassword(false);
   };
@@ -124,50 +128,106 @@ function AdminPage() {
     setSystemError("");
   };
 
+  // VALIDATION
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+  const isPasswordValid =
+    form.password.length === 0 ? true : passwordRegex.test(form.password);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!form.name.trim()) {
+      newErrors.name = "Full name is required";
+    }
+
+    if (!form.username.trim()) {
+      newErrors.username = "Username is required";
+    }
+
+    if (!editingUser && !form.password) {
+      newErrors.password = "Password is required";
+    }
+
+    if (form.password && !passwordRegex.test(form.password)) {
+      newErrors.password = "Must be 8+ chars, include letters and numbers";
+    }
+
+    if (
+      (form.password || form.confirmPassword) &&
+      form.password !== form.confirmPassword
+    ) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (!form.sex) {
+      newErrors.sex = "Please select sex";
+    }
+
+    if (!form.age || Number(form.age) <= 0) {
+      newErrors.age = "Invalid age";
+    }
+
+    if (!form.position.trim()) {
+      newErrors.position = "Position is required";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+
+    setFormError("");
+    setSystemError("");
+  };
+
+  // CREATE USER
   const createUser = async () => {
     try {
       setFormError("");
       setSystemError("");
 
-      if (!form.name || !form.username || !form.password) {
-        setFormError(
-          "Full name, username, and password are required."
-        );
-        return;
-      }
+      if (!validateForm()) return;
 
-      if (form.password !== form.confirmPassword) {
-        setFormError("Passwords do not match.");
-        return;
-      }
-
-      const res = await authFetch(
-        `${import.meta.env.VITE_API_URL}/users`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: form.name,
-            username: form.username,
-            password: form.password,
-            sex: form.sex,
-            age: form.age ? Number(form.age) : null,
-            position: form.position,
-            role: form.role,
-          }),
-        }
-      );
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: form.name,
+          username: form.username,
+          password: form.password,
+          sex: form.sex,
+          age: Number(form.age),
+          position: form.position,
+          role: form.role,
+        }),
+      });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setSystemError(
-          data.message ||
+        setModal({
+          type: "alert",
+          message:
+            data.message ||
             data.error ||
-            "Failed to create user."
-        );
+            "Failed to create user.",
+        });
         return;
       }
 
@@ -175,17 +235,21 @@ function AdminPage() {
       fetchUsers();
     } catch (err) {
       console.error("CREATE USER ERROR:", err);
-      setSystemError("Failed to create user.");
+
+      setModal({
+        type: "alert",
+        message: "Unexpected error while creating user.",
+      });
     }
   };
 
+  // START EDIT
   const startEdit = (user) => {
     setEditingUser(user);
+
     setPendingDeleteId(null);
     setDeleteAdminPassword("");
     setDeletePasswordError("");
-    setFormError("");
-    setSystemError("");
 
     setForm({
       name: user.name || "",
@@ -198,10 +262,16 @@ function AdminPage() {
       role: user.role || "user",
     });
 
+    setErrors({});
     setAdminPassword("");
     setAdminPasswordError("");
+    setFormError("");
+    setSystemError("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   };
 
+  // UPDATE USER
   const updateUser = async () => {
     try {
       if (!editingUser) return;
@@ -210,34 +280,17 @@ function AdminPage() {
       setSystemError("");
       setAdminPasswordError("");
 
-      if (!form.name || !form.username) {
-        setFormError(
-          "Full name and username are required."
-        );
-        return;
-      }
-
-      if (form.password || form.confirmPassword) {
-        if (form.password !== form.confirmPassword) {
-          setFormError("Passwords do not match.");
-          return;
-        }
-      }
+      if (!validateForm()) return;
 
       if (!adminPassword) {
-        setAdminPasswordError(
-          "Enter your admin password to confirm changes."
-        );
+        setAdminPasswordError("Enter your admin password to confirm changes.");
         return;
       }
 
-      const isAdminPasswordValid =
-        await verifyAdminPassword(adminPassword);
+      const isAdminPasswordValid = await verifyAdminPassword(adminPassword);
 
       if (!isAdminPasswordValid) {
-        setAdminPasswordError(
-          "Incorrect admin password."
-        );
+        setAdminPasswordError("Incorrect admin password.");
         return;
       }
 
@@ -245,7 +298,7 @@ function AdminPage() {
         name: form.name,
         username: form.username,
         sex: form.sex,
-        age: form.age ? Number(form.age) : null,
+        age: Number(form.age),
         position: form.position,
         role: form.role,
       };
@@ -268,11 +321,13 @@ function AdminPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setSystemError(
-          data.message ||
+        setModal({
+          type: "alert",
+          message:
+            data.message ||
             data.error ||
-            "Failed to update user."
-        );
+            "Failed to update user.",
+        });
         return;
       }
 
@@ -280,10 +335,15 @@ function AdminPage() {
       fetchUsers();
     } catch (err) {
       console.error("UPDATE USER ERROR:", err);
-      setSystemError("Failed to update user.");
+
+      setModal({
+        type: "alert",
+        message: "Failed to update user.",
+      });
     }
   };
 
+  // DELETE USER
   const askDeleteUser = (id) => {
     setPendingDeleteId(id);
     setDeleteAdminPassword("");
@@ -298,43 +358,60 @@ function AdminPage() {
       setSystemError("");
 
       if (!deleteAdminPassword) {
-        setDeletePasswordError(
-          "Enter your admin password to confirm deletion."
-        );
+        setDeletePasswordError("Enter your admin password to confirm deletion.");
         return;
       }
 
-      const isAdminPasswordValid =
-        await verifyAdminPassword(deleteAdminPassword);
+      const isAdminPasswordValid = await verifyAdminPassword(deleteAdminPassword);
 
       if (!isAdminPasswordValid) {
-        setDeletePasswordError(
-          "Incorrect admin password."
-        );
+        setDeletePasswordError("Incorrect admin password.");
         return;
       }
 
-      const res = await authFetch(
-        `${import.meta.env.VITE_API_URL}/users/${pendingDeleteId}`,
-        { method: "DELETE" }
-      );
+      setModal({
+        type: "confirm",
+        message: "Delete this user?",
+        onConfirm: async () => {
+          try {
+            const res = await authFetch(
+              `${import.meta.env.VITE_API_URL}/users/${pendingDeleteId}`,
+              { method: "DELETE" }
+            );
 
-      const data = await res.json();
+            let data = {};
 
-      if (!res.ok) {
-        setSystemError(
-          data.message ||
-            data.error ||
-            "Failed to delete user."
-        );
-        return;
-      }
+            try {
+              data = await res.json();
+            } catch {
+              data = {};
+            }
 
-      resetDeleteConfirmation();
-      fetchUsers();
+            if (!res.ok) {
+              setModal({
+                type: "alert",
+                message:
+                  data.message ||
+                  data.error ||
+                  "Failed to delete user.",
+              });
+              return;
+            }
+
+            resetDeleteConfirmation();
+            fetchUsers();
+          } catch (err) {
+            console.error("DELETE USER ERROR:", err);
+
+            setModal({
+              type: "alert",
+              message: "Failed to delete user.",
+            });
+          }
+        },
+      });
     } catch (err) {
-      console.error("DELETE USER ERROR:", err);
-      setSystemError("Failed to delete user.");
+      console.error("CONFIRM DELETE ERROR:", err);
     }
   };
 
@@ -343,164 +420,147 @@ function AdminPage() {
       <h1>Admin Panel</h1>
 
       <div className="admin-card">
-        <h3>
-          {editingUser ? "Edit User" : "Create User"}
-        </h3>
+        <h3>{editingUser ? "Edit User" : "Create User"}</h3>
 
-        {formError && (
-          <div className="warning-bubble">
-            {formError}
-          </div>
-        )}
+        {formError && <div className="warning-bubble">{formError}</div>}
 
-        {systemError && (
-          <div className="warning-bubble">
-            {systemError}
-          </div>
-        )}
+        {systemError && <div className="warning-bubble">{systemError}</div>}
 
-        <input
-          placeholder="Full Name"
-          value={form.name}
-          onChange={(e) => {
-            setForm({
-              ...form,
-              name: e.target.value,
-            });
-            setFormError("");
-          }}
-        />
+        {/* FULL NAME */}
+        <div>
+          <input
+            name="name"
+            placeholder="Full Name"
+            value={form.name}
+            onChange={handleChange}
+          />
 
-        <input
-          placeholder="Username"
-          value={form.username}
-          onChange={(e) => {
-            setForm({
-              ...form,
-              username: e.target.value,
-            });
-            setFormError("");
-          }}
-        />
+          {errors.name && (
+            <small className="error-bubble">{errors.name}</small>
+          )}
+        </div>
 
+        {/* USERNAME */}
+        <div>
+          <input
+            name="username"
+            placeholder="Username"
+            value={form.username}
+            onChange={handleChange}
+          />
+
+          {errors.username && (
+            <small className="error-bubble">{errors.username}</small>
+          )}
+        </div>
+
+        {/* PASSWORD */}
         <div className="password-field">
           <input
-            type={
-              showPassword ? "text" : "password"
-            }
+            name="password"
+            type={showPassword ? "text" : "password"}
             placeholder={
               editingUser
                 ? "New Password (leave blank to keep old password)"
                 : "Password"
             }
             value={form.password}
-            onChange={(e) => {
-              setForm({
-                ...form,
-                password: e.target.value,
-              });
-              setFormError("");
-            }}
+            onChange={handleChange}
           />
 
           <button
             type="button"
             className="eye-btn"
-            onClick={() =>
-              setShowPassword(!showPassword)
-            }
+            onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? "Hide" : "Show"}
           </button>
+
+          {form.password.length > 0 && (
+            <small
+              style={{
+                color: isPasswordValid ? "green" : "red",
+              }}
+            >
+              {isPasswordValid
+                ? "Strong password"
+                : "Must be 8+ chars, include letters and numbers"}
+            </small>
+          )}
+
+          {errors.password && (
+            <small className="error-bubble">{errors.password}</small>
+          )}
         </div>
 
+        {/* CONFIRM PASSWORD */}
         <div className="password-field">
           <input
-            type={
-              showConfirmPassword
-                ? "text"
-                : "password"
-            }
-            placeholder={
-              editingUser
-                ? "Confirm New Password"
-                : "Confirm Password"
-            }
+            name="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder={editingUser ? "Confirm New Password" : "Confirm Password"}
             value={form.confirmPassword}
-            onChange={(e) => {
-              setForm({
-                ...form,
-                confirmPassword: e.target.value,
-              });
-              setFormError("");
-            }}
+            onChange={handleChange}
           />
 
           <button
             type="button"
             className="eye-btn"
-            onClick={() =>
-              setShowConfirmPassword(
-                !showConfirmPassword
-              )
-            }
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
           >
-            {showConfirmPassword
-              ? "Hide"
-              : "Show"}
+            {showConfirmPassword ? "Hide" : "Show"}
           </button>
+
+          {errors.confirmPassword && (
+            <small className="error-bubble">{errors.confirmPassword}</small>
+          )}
         </div>
 
-        <select
-          value={form.sex}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              sex: e.target.value,
-            })
-          }
-        >
-          <option value="">Select Sex</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
+        {/* SEX */}
+        <div>
+          <select name="sex" value={form.sex} onChange={handleChange}>
+            <option value="">Select Sex</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
 
-        <input
-          type="number"
-          placeholder="Age"
-          value={form.age}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              age: e.target.value,
-            })
-          }
-        />
+          {errors.sex && <small className="error-bubble">{errors.sex}</small>}
+        </div>
 
-        <input
-          placeholder="Position"
-          value={form.position}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              position: e.target.value,
-            })
-          }
-        />
+        {/* AGE */}
+        <div>
+          <input
+            name="age"
+            type="number"
+            placeholder="Age"
+            value={form.age}
+            onChange={handleChange}
+          />
 
-        <select
-          value={form.role}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              role: e.target.value,
-            })
-          }
-        >
+          {errors.age && <small className="error-bubble">{errors.age}</small>}
+        </div>
+
+        {/* POSITION */}
+        <div>
+          <input
+            name="position"
+            placeholder="Position"
+            value={form.position}
+            onChange={handleChange}
+          />
+
+          {errors.position && (
+            <small className="error-bubble">{errors.position}</small>
+          )}
+        </div>
+
+        {/* ROLE */}
+        <select name="role" value={form.role} onChange={handleChange}>
           <option value="user">User</option>
           <option value="admin">Admin</option>
         </select>
 
+        {/* ADMIN PASSWORD */}
         {editingUser && (
           <>
             <input
@@ -514,26 +574,23 @@ function AdminPage() {
             />
 
             {adminPasswordError && (
-              <div className="warning-bubble">
-                {adminPasswordError}
-              </div>
+              <div className="warning-bubble">{adminPasswordError}</div>
             )}
           </>
         )}
 
+        {/* ACTIONS */}
         {editingUser ? (
           <div className="admin-actions">
             <button
               className="admin-btn"
               onClick={updateUser}
+              disabled={!isPasswordValid}
             >
               Save Changes
             </button>
 
-            <button
-              className="cancel-btn"
-              onClick={resetForm}
-            >
+            <button className="cancel-btn" onClick={resetForm}>
               Cancel Edit
             </button>
           </div>
@@ -541,101 +598,71 @@ function AdminPage() {
           <button
             className="admin-btn"
             onClick={createUser}
+            disabled={!isPasswordValid}
           >
             Create User
           </button>
         )}
       </div>
 
+      {/* DELETE CONFIRM */}
       {pendingDeleteId && (
         <div className="admin-card">
           <h3>Confirm Delete</h3>
 
-          <p>
-            Enter admin password to delete this
-            user.
-          </p>
+          <p>Enter admin password to delete this user.</p>
 
           <input
             type="password"
             placeholder="Admin password"
             value={deleteAdminPassword}
             onChange={(e) => {
-              setDeleteAdminPassword(
-                e.target.value
-              );
+              setDeleteAdminPassword(e.target.value);
               setDeletePasswordError("");
             }}
           />
 
           {deletePasswordError && (
-            <div className="warning-bubble">
-              {deletePasswordError}
-            </div>
+            <div className="warning-bubble">{deletePasswordError}</div>
           )}
 
           <div className="admin-actions">
-            <button
-              className="delete-btn"
-              onClick={confirmDeleteUser}
-            >
+            <button className="delete-btn" onClick={confirmDeleteUser}>
               Confirm Delete
             </button>
 
-            <button
-              className="cancel-btn"
-              onClick={
-                resetDeleteConfirmation
-              }
-            >
+            <button className="cancel-btn" onClick={resetDeleteConfirmation}>
               Cancel
             </button>
           </div>
         </div>
       )}
 
+      {/* USER LIST */}
       <div className="admin-card">
         <h3>User List</h3>
 
         <div className="user-list">
           {users.map((u) => (
-            <div
-              key={u._id}
-              className="user-item"
-            >
+            <div key={u._id} className="user-item">
               <span>
-                <strong>
-                  {u.name || u.username}
-                </strong>{" "}
-                — {u.role}
+                <strong>{u.name || u.username}</strong> — {u.role}
                 <br />
 
                 <small>
                   Username: {u.username}
                   <br />
-                  Sex: {u.sex || "N/A"} •
-                  Age: {u.age || "N/A"} •
-                  Position:{" "}
+                  Sex: {u.sex || "N/A"} • Age: {u.age || "N/A"} • Position:{" "}
                   {u.position || "N/A"}
                 </small>
               </span>
 
               <div className="user-actions">
-                <button
-                  className="edit-btn"
-                  onClick={() =>
-                    startEdit(u)
-                  }
-                >
+                <button className="edit-btn" onClick={() => startEdit(u)}>
                   Edit
                 </button>
 
-                <button
-                  className="delete-btn"
-                  onClick={() =>
-                    askDeleteUser(u._id)
-                  }
-                >
+                <button className="delete-btn" onClick={() => askDeleteUser(u._id)}>
                   Delete
                 </button>
               </div>
@@ -643,6 +670,34 @@ function AdminPage() {
           ))}
         </div>
       </div>
+
+      {/* MODAL */}
+      {modal && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <p>{modal.message}</p>
+
+            {modal.type === "alert" && (
+              <button onClick={() => setModal(null)}>OK</button>
+            )}
+
+            {modal.type === "confirm" && (
+              <div className="modal-actions">
+                <button
+                  onClick={() => {
+                    modal.onConfirm?.();
+                    setModal(null);
+                  }}
+                >
+                  Yes
+                </button>
+
+                <button onClick={() => setModal(null)}>Cancel</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
