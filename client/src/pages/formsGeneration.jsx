@@ -209,6 +209,16 @@ function FormsGeneration() {
         currentRowErrors.arNo = "AR No required";
       }
 
+      const duplicateAr = computedRows.findIndex(
+        (r, idx) =>
+          idx !== index &&
+          r.arNo.trim().toLowerCase() === row.arNo.trim().toLowerCase()
+      );
+
+      if (row.arNo.trim() && duplicateAr !== -1) {
+        currentRowErrors.arNo = "Duplicate AR No not allowed";
+      }
+
       if (!row.beanId) {
         currentRowErrors.beanId = "Select a bean";
       }

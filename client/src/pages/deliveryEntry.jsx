@@ -19,6 +19,7 @@ function DeliveryEntry() {
   const [beans, setBeans] = useState([]);
   const [file, setFile] = useState(null);
   const [errors, setErrors] = useState({});
+  const [expandedId, setExpandedId] = useState(null);
 
   const [deleteId, setDeleteId] = useState(null);
   const [deletePassword, setDeletePassword] = useState("");
@@ -44,6 +45,30 @@ function DeliveryEntry() {
   };
 
   const [form, setForm] = useState(emptyForm);
+
+  const getProofImageUrl = (delivery) => {
+    const proof =
+      delivery.proofOfDelivery ||
+      delivery.proofImage ||
+      delivery.image ||
+      delivery.imageUrl ||
+      delivery.filePath ||
+      delivery.photo;
+
+    if (!proof) return "";
+
+    if (proof.startsWith("http")) {
+      return proof;
+    }
+
+    const cleanPath = proof.replace(/\\/g, "/");
+
+    if (cleanPath.startsWith("/")) {
+      return `${API}${cleanPath}`;
+    }
+
+    return `${API}/${cleanPath}`;
+  };
 
   const fetchData = async () => {
     try {
@@ -265,19 +290,124 @@ function DeliveryEntry() {
           </div>
 
           <div className="delivery-list">
-            {deliveries.map((d) => (
-              <div key={d._id} className="delivery-item">
-                <span>
-                  {d.farmer} • {d.beanType} • {d.date?.slice(0, 10)} • Volume:{" "}
-                  {d.volume ?? 0} • Price: {d.pricePerUnit ?? 0} • Total:{" "}
-                  {d.totalAmount ?? 0}
-                </span>
+            {deliveries.map((d) => {
+              const isExpanded = expandedId === d._id;
+              const proofImageUrl = getProofImageUrl(d);
 
-                <button className="delete-btn" onClick={() => openDelete(d._id)}>
-                  🗑 Delete
-                </button>
-              </div>
-            ))}
+              return (
+                <div key={d._id} className="delivery-item">
+                  <div
+                    onClick={() => setExpandedId(isExpanded ? null : d._id)}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: "10px",
+                      cursor: "pointer",
+                      width: "100%",
+                    }}
+                  >
+                    <span>
+                      {isExpanded ? "▼" : "▶"} {d.farmer} • {d.beanType} •{" "}
+                      {d.date?.slice(0, 10)} • Volume: {d.volume ?? 0} • Price:{" "}
+                      {d.pricePerUnit ?? 0} • Total: {d.totalAmount ?? 0}
+                    </span>
+
+                    <button
+                      className="delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDelete(d._id);
+                      }}
+                    >
+                      🗑 Delete
+                    </button>
+                  </div>
+
+                  {isExpanded && (
+                    <div
+                      className="delivery-details"
+                      style={{
+                        marginTop: "12px",
+                        padding: "12px",
+                        borderTop: "1px solid #ddd",
+                        display: "grid",
+                        gap: "8px",
+                      }}
+                    >
+                      <p>
+                        <strong>Farmer:</strong> {d.farmer || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Farmer Contact:</strong>{" "}
+                        {d.farmerContact || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Bean Type:</strong> {d.beanType || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Volume:</strong> {d.volume ?? 0}
+                      </p>
+                      <p>
+                        <strong>Price Per Unit:</strong> ₱
+                        {d.pricePerUnit ?? 0}
+                      </p>
+                      <p>
+                        <strong>Total Amount:</strong> ₱
+                        {d.totalAmount ?? 0}
+                      </p>
+                      <p>
+                        <strong>Courier:</strong> {d.courier || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Date:</strong>{" "}
+                        {d.date ? d.date.slice(0, 10) : "N/A"}
+                      </p>
+                      <p>
+                        <strong>Delivery Guy:</strong>{" "}
+                        {d.deliveryGuy || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Delivery Guy Contact:</strong>{" "}
+                        {d.deliveryGuyContact || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Consignee:</strong> {d.consignee || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Consignee Contact:</strong>{" "}
+                        {d.consigneeContact || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Recorded By:</strong>{" "}
+                        {d.recordedBy || "N/A"}
+                      </p>
+
+                      <div>
+                        <strong>Proof of Delivery:</strong>
+
+                        {proofImageUrl ? (
+                          <div style={{ marginTop: "8px" }}>
+                            <img
+                              src={proofImageUrl}
+                              alt="Proof of Delivery"
+                              style={{
+                                maxWidth: "320px",
+                                width: "100%",
+                                borderRadius: "10px",
+                                border: "1px solid #ccc",
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <p>No proof of delivery uploaded.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </>
       )}
