@@ -3,12 +3,15 @@ import axios from "axios";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
+import "./formsGeneration.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function FormsGeneration() {
   const [farmers, setFarmers] = useState([]);
   const [beans, setBeans] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [systemError, setSystemError] = useState("");
 
   const [form, setForm] = useState({
     farmerId: "",
@@ -36,6 +39,8 @@ function FormsGeneration() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setSystemError("");
+
         const [farmersRes, beansRes] = await Promise.all([
           axios.get(`${API_URL}/api/farmers`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -45,18 +50,27 @@ function FormsGeneration() {
           }),
         ]);
 
-        setFarmers(farmersRes.data || []);
+        const farmerData = Array.isArray(farmersRes.data)
+          ? farmersRes.data
+          : farmersRes.data.data || [];
+
+        const beanData = Array.isArray(beansRes.data)
+          ? beansRes.data
+          : beansRes.data.data || [];
+
+        setFarmers(farmerData);
 
         setBeans(
-          (beansRes.data || []).map((bean) => ({
+          beanData.map((bean) => ({
             id: bean._id,
-            name: bean.beanName,
-            pricePerUnit: bean.pricePerUnit,
+            name: bean.beanName || bean.name,
+            pricePerUnit: Number(bean.pricePerUnit || bean.price || 0),
             unit: bean.unit,
           }))
         );
       } catch (err) {
         console.error("Fetch error:", err);
+        setSystemError("Failed to load farmers and beans.");
       }
     };
 
@@ -90,16 +104,44 @@ function FormsGeneration() {
   );
 
   const handleFormChange = (e) => {
+    const { name, value } = e.target;
+
     setForm((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+
+    setSystemError("");
   };
 
   const handleRowChange = (index, field, value) => {
     setRows((prev) =>
       prev.map((r, i) => (i === index ? { ...r, [field]: value } : r))
     );
+
+    setErrors((prev) => {
+      const updatedRowErrors = { ...(prev.rowErrors || {}) };
+
+      if (updatedRowErrors[index]) {
+        updatedRowErrors[index] = {
+          ...updatedRowErrors[index],
+          [field]: "",
+        };
+      }
+
+      return {
+        ...prev,
+        rows: "",
+        rowErrors: updatedRowErrors,
+      };
+    });
+
+    setSystemError("");
   };
 
   const addRow = () => {
@@ -113,26 +155,85 @@ function FormsGeneration() {
         remarks2: "",
       },
     ]);
+
+    setErrors((prev) => ({
+      ...prev,
+      rows: "",
+    }));
   };
 
   const removeRow = (index) => {
     setRows((prev) =>
       prev.length > 1 ? prev.filter((_, i) => i !== index) : prev
     );
+
+    setErrors((prev) => ({
+      ...prev,
+      rows: "",
+      rowErrors: {},
+    }));
   };
 
   const validateForm = () => {
+    const newErrors = {};
+    const rowErrors = {};
+
     if (!selectedFarmer) {
-      alert("Please select a farmer.");
-      return false;
+      newErrors.farmerId = "Please select a farmer";
     }
 
-    if (computedRows.some((r) => !r.beanId || !r.volume)) {
-      alert("Please complete all rows.");
-      return false;
+    if (!form.deliveryDT) {
+      newErrors.deliveryDT = "Delivery date required";
     }
 
-    return true;
+    if (!form.beanOrigin.trim()) {
+      newErrors.beanOrigin = "Required";
+    }
+
+    if (!form.beanAltitude.trim()) {
+      newErrors.beanAltitude = "Required";
+    }
+
+    if (!form.receiverName.trim()) {
+      newErrors.receiverName = "Required";
+    }
+
+    if (!form.payorName.trim()) {
+      newErrors.payorName = "Required";
+    }
+
+    computedRows.forEach((row, index) => {
+      const currentRowErrors = {};
+
+      if (!row.arNo.trim()) {
+        currentRowErrors.arNo = "AR No required";
+      }
+
+      if (!row.beanId) {
+        currentRowErrors.beanId = "Select a bean";
+      }
+
+      if (!row.volume || Number(row.volume) <= 0) {
+        currentRowErrors.volume = "Enter valid volume";
+      }
+
+      if (!row.paymentDT) {
+        currentRowErrors.paymentDT = "Payment date required";
+      }
+
+      if (Object.keys(currentRowErrors).length > 0) {
+        rowErrors[index] = currentRowErrors;
+      }
+    });
+
+    if (Object.keys(rowErrors).length > 0) {
+      newErrors.rows = "Complete all row fields";
+      newErrors.rowErrors = rowErrors;
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
   };
 
   const buildDocData = () => ({
@@ -158,6 +259,8 @@ function FormsGeneration() {
     if (!validateForm()) return;
 
     try {
+      setSystemError("");
+
       const response = await fetch("/templates/Sample_Palamboon.docx");
       const content = await response.arrayBuffer();
 
@@ -179,7 +282,7 @@ function FormsGeneration() {
       saveAs(blob, `Form-${selectedFarmer?.name || "output"}.docx`);
     } catch (err) {
       console.error(err);
-      alert("DOCX generation failed.");
+      setSystemError("DOCX generation failed.");
     }
   };
 
@@ -187,14 +290,12 @@ function FormsGeneration() {
     if (!validateForm()) return;
 
     try {
-      const res = await axios.post(
-        `${API_URL}/api/forms/print`,
-        buildDocData(),
-        {
-          responseType: "blob",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      setSystemError("");
+
+      const res = await axios.post(`${API_URL}/api/forms/print`, buildDocData(), {
+        responseType: "blob",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const pdfBlob = new Blob([res.data], {
         type: "application/pdf",
@@ -205,7 +306,7 @@ function FormsGeneration() {
       const win = window.open(url);
 
       if (!win) {
-        alert("Popup blocked. Please allow popups for this site.");
+        setSystemError("Popup blocked. Please allow popups for this site.");
         return;
       }
 
@@ -214,7 +315,7 @@ function FormsGeneration() {
       };
     } catch (err) {
       console.error(err);
-      alert("Print failed.");
+      setSystemError("Print failed.");
     }
   };
 
@@ -222,71 +323,119 @@ function FormsGeneration() {
     <div style={{ padding: "20px" }}>
       <h2>Forms Generation</h2>
 
+      {systemError && <div className="warning-bubble">{systemError}</div>}
+
       <div style={{ display: "grid", gap: "10px", maxWidth: "900px" }}>
-        <select
-          name="farmerId"
-          value={form.farmerId}
-          onChange={handleFormChange}
-        >
-          <option value="">Select Farmer</option>
-          {farmers.map((f) => (
-            <option key={f._id} value={f._id}>
-              {f.name}
-            </option>
-          ))}
-        </select>
+        <div>
+          <select
+            name="farmerId"
+            value={form.farmerId}
+            onChange={handleFormChange}
+            className={errors.farmerId ? "input-error" : ""}
+          >
+            <option value="">Select Farmer</option>
+            {farmers.map((f) => (
+              <option key={f._id} value={f._id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
 
-        {/* ✅ ONLY CHANGE APPLIED HERE */}
-        <input
-          type="datetime-local"
-          name="deliveryDT"
-          value={form.deliveryDT}
-          onChange={handleFormChange}
-          onInput={(e) => e.target.blur()}
-        />
+          {errors.farmerId && (
+            <small className="error-bubble">{errors.farmerId}</small>
+          )}
+        </div>
 
-        <input
-          name="beanOrigin"
-          placeholder="Bean Origin"
-          value={form.beanOrigin}
-          onChange={handleFormChange}
-        />
+        <div>
+          <input
+            type="datetime-local"
+            name="deliveryDT"
+            value={form.deliveryDT}
+            onChange={handleFormChange}
+            onInput={(e) => e.target.blur()}
+            className={errors.deliveryDT ? "input-error" : ""}
+          />
 
-        <input
-          name="beanAltitude"
-          placeholder="Bean Altitude"
-          value={form.beanAltitude}
-          onChange={handleFormChange}
-        />
+          {errors.deliveryDT && (
+            <small className="error-bubble">{errors.deliveryDT}</small>
+          )}
+        </div>
 
-        <input
-          name="remarks"
-          placeholder="Remarks"
-          value={form.remarks}
-          onChange={handleFormChange}
-        />
+        <div>
+          <input
+            name="beanOrigin"
+            placeholder="Bean Origin"
+            value={form.beanOrigin}
+            onChange={handleFormChange}
+            className={errors.beanOrigin ? "input-error" : ""}
+          />
 
-        <input
-          name="receiverName"
-          placeholder="Receiver Name"
-          value={form.receiverName}
-          onChange={handleFormChange}
-        />
+          {errors.beanOrigin && (
+            <small className="error-bubble">{errors.beanOrigin}</small>
+          )}
+        </div>
 
-        <input
-          name="payorName"
-          placeholder="Payor Name"
-          value={form.payorName}
-          onChange={handleFormChange}
-        />
+        <div>
+          <input
+            name="beanAltitude"
+            placeholder="Bean Altitude"
+            value={form.beanAltitude}
+            onChange={handleFormChange}
+            className={errors.beanAltitude ? "input-error" : ""}
+          />
+
+          {errors.beanAltitude && (
+            <small className="error-bubble">{errors.beanAltitude}</small>
+          )}
+        </div>
+
+        <div>
+          <input
+            name="remarks"
+            placeholder="Remarks"
+            value={form.remarks}
+            onChange={handleFormChange}
+          />
+        </div>
+
+        <div>
+          <input
+            name="receiverName"
+            placeholder="Receiver Name"
+            value={form.receiverName}
+            onChange={handleFormChange}
+            className={errors.receiverName ? "input-error" : ""}
+          />
+
+          {errors.receiverName && (
+            <small className="error-bubble">{errors.receiverName}</small>
+          )}
+        </div>
+
+        <div>
+          <input
+            name="payorName"
+            placeholder="Payor Name"
+            value={form.payorName}
+            onChange={handleFormChange}
+            className={errors.payorName ? "input-error" : ""}
+          />
+
+          {errors.payorName && (
+            <small className="error-bubble">{errors.payorName}</small>
+          )}
+        </div>
       </div>
 
       <h3 style={{ marginTop: "20px" }}>Rows</h3>
+
+      {errors.rows && <small className="error-bubble">{errors.rows}</small>}
 
       {rows.map((row, i) => {
         const bean = getBeanById(row.beanId);
         const unitCost = bean?.pricePerUnit || 0;
         const total = unitCost * (row.volume || 0);
+        const rowError = errors.rowErrors?.[i] || {};
 
         return (
           <div
@@ -301,56 +450,76 @@ function FormsGeneration() {
           >
             <strong>Row {i + 1}</strong>
 
-            <input
-              placeholder="AR No"
-              value={row.arNo}
-              onChange={(e) =>
-                handleRowChange(i, "arNo", e.target.value)
-              }
-            />
+            <div>
+              <input
+                placeholder="AR No"
+                value={row.arNo}
+                onChange={(e) => handleRowChange(i, "arNo", e.target.value)}
+                className={rowError.arNo ? "input-error" : ""}
+              />
 
-            <select
-              value={row.beanId}
-              onChange={(e) =>
-                handleRowChange(i, "beanId", e.target.value)
-              }
-            >
-              <option value="">Select Bean</option>
-              {beans.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
+              {rowError.arNo && (
+                <small className="error-bubble">{rowError.arNo}</small>
+              )}
+            </div>
+
+            <div>
+              <select
+                value={row.beanId}
+                onChange={(e) => handleRowChange(i, "beanId", e.target.value)}
+                className={rowError.beanId ? "input-error" : ""}
+              >
+                <option value="">Select Bean</option>
+                {beans.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+
+              {rowError.beanId && (
+                <small className="error-bubble">{rowError.beanId}</small>
+              )}
+            </div>
 
             <input value={unitCost} readOnly />
 
-            <input
-              type="number"
-              placeholder="Volume"
-              value={row.volume}
-              onChange={(e) =>
-                handleRowChange(i, "volume", e.target.value)
-              }
-            />
+            <div>
+              <input
+                type="number"
+                placeholder="Volume"
+                value={row.volume}
+                onChange={(e) => handleRowChange(i, "volume", e.target.value)}
+                className={rowError.volume ? "input-error" : ""}
+              />
+
+              {rowError.volume && (
+                <small className="error-bubble">{rowError.volume}</small>
+              )}
+            </div>
 
             <input value={total} readOnly />
 
-            <input
-              type="datetime-local"
-              value={row.paymentDT}
-              onChange={(e) => {
-                handleRowChange(i, "paymentDT", e.target.value);
-                e.target.blur();
-            }}
-            />
+            <div>
+              <input
+                type="datetime-local"
+                value={row.paymentDT}
+                onChange={(e) => {
+                  handleRowChange(i, "paymentDT", e.target.value);
+                  e.target.blur();
+                }}
+                className={rowError.paymentDT ? "input-error" : ""}
+              />
+
+              {rowError.paymentDT && (
+                <small className="error-bubble">{rowError.paymentDT}</small>
+              )}
+            </div>
 
             <input
               placeholder="Remarks"
               value={row.remarks2}
-              onChange={(e) =>
-                handleRowChange(i, "remarks2", e.target.value)
-              }
+              onChange={(e) => handleRowChange(i, "remarks2", e.target.value)}
             />
 
             <button onClick={() => removeRow(i)}>Remove</button>

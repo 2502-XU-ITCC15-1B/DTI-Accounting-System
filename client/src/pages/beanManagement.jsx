@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { authFetch } from "../utils/authFetch";
+import "./admin.css";
 
 function BeanManagement({ beans, setBeans }) {
   const [form, setForm] = useState({
@@ -12,7 +13,7 @@ function BeanManagement({ beans, setBeans }) {
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // 🔄 LOAD FROM BACKEND
+  // LOAD FROM BACKEND
   useEffect(() => {
     const fetchBeans = async () => {
       try {
@@ -30,6 +31,9 @@ function BeanManagement({ beans, setBeans }) {
         setBeans(mapped);
       } catch (err) {
         console.error(err);
+        setErrors({
+          submit: "Failed to load beans.",
+        });
       }
     };
 
@@ -43,31 +47,50 @@ function BeanManagement({ beans, setBeans }) {
       pricePerUnit: "",
       unit: "kg",
     });
+
+    setErrors({});
     setIsEditing(false);
   };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+
     setForm((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+      submit: "",
     }));
   };
 
-  // 🔥 CREATE / UPDATE
+  // CREATE / UPDATE
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name.trim() || !form.pricePerUnit || !form.unit.trim()) {
-      const newErrors = {};
-      if (!form.name.trim()) newErrors.name = "Bean name is required";
-      if (!form.pricePerUnit) newErrors.pricePerUnit = "Price is required";
-      if (!form.unit.trim()) newErrors.unit = "Unit is required";
+    const newErrors = {};
 
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return;
-      }
+    if (!form.name.trim()) {
+      newErrors.name = "Bean name is required";
     }
+
+    if (!form.pricePerUnit) {
+      newErrors.pricePerUnit = "Price is required";
+    }
+
+    if (!form.unit.trim()) {
+      newErrors.unit = "Unit is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
 
     const beanData = {
       beanName: form.name.trim(),
@@ -88,7 +111,6 @@ function BeanManagement({ beans, setBeans }) {
         });
       }
 
-      // refresh
       const res = await authFetch("/api/beans");
       const data = await res.json();
 
@@ -105,6 +127,10 @@ function BeanManagement({ beans, setBeans }) {
       resetForm();
     } catch (err) {
       console.error(err);
+
+      setErrors({
+        submit: "Failed to save bean.",
+      });
     }
   };
 
@@ -115,41 +141,33 @@ function BeanManagement({ beans, setBeans }) {
       pricePerUnit: bean.pricePerUnit,
       unit: bean.unit,
     });
+
+    setErrors({});
     setIsEditing(true);
   };
 
-  // 🔥 DELETE
+  // DELETE
   const handleDelete = async (id) => {
-    const confirmed = window.confirm("Are you sure you want to delete this bean?");
-    if (!confirmed) return;
-
     try {
       await authFetch(`/api/beans/${id}`, {
         method: "DELETE",
       });
 
       setBeans((prev) => prev.filter((bean) => bean.id !== id));
+      setErrors({});
     } catch (err) {
       console.error(err);
+
+      setErrors({
+        submit: "Failed to delete bean.",
+      });
     }
   };
 
-    const bubbleStyle = {
-    background: "#fff4e5",
-    border: "1px solid #f5c26b",
-    color: "#8a5700",
-    padding: "6px 10px",
-    borderRadius: "12px",
-    fontSize: "12px",
-    marginTop: "4px",
-    display: "inline-block",
-  };
-
   return (
-    <div style={{ padding: "20px" }}>
+    <div className="admin-container">
       <h2>Bean Management</h2>
 
-      {/* FORM */}
       <form
         onSubmit={handleSubmit}
         style={{
@@ -160,43 +178,58 @@ function BeanManagement({ beans, setBeans }) {
         }}
       >
         <div>
-        <input
-          type="text"
-          name="name"
-          placeholder="Bean name"
-          value={form.name}
-          onChange={handleChange}
-        />
+          <input
+            type="text"
+            name="name"
+            placeholder="Bean name"
+            value={form.name}
+            onChange={handleChange}
+          />
+
           {errors.name && (
-          <div style={bubbleStyle}>{errors.name}</div>
+            <div className="error-bubble">
+              {errors.name}
+            </div>
           )}
         </div>
 
         <div>
-        <input
-          type="number"
-          name="pricePerUnit"
-          placeholder="Price per unit"
-          value={form.pricePerUnit}
-          onChange={handleChange}
-        />
+          <input
+            type="number"
+            name="pricePerUnit"
+            placeholder="Price per unit"
+            value={form.pricePerUnit}
+            onChange={handleChange}
+          />
+
           {errors.pricePerUnit && (
-          <div style={bubbleStyle}>{errors.pricePerUnit}</div>
+            <div className="error-bubble">
+              {errors.pricePerUnit}
+            </div>
           )}
         </div>
 
         <div>
-        <input
-          type="text"
-          name="unit"
-          placeholder="Unit"
-          value={form.unit}
-          onChange={handleChange}
-        />
-        {errors.unit && (
-        <div style={bubbleStyle}>{errors.unit}</div>
-        )}
+          <input
+            type="text"
+            name="unit"
+            placeholder="Unit"
+            value={form.unit}
+            onChange={handleChange}
+          />
+
+          {errors.unit && (
+            <div className="error-bubble">
+              {errors.unit}
+            </div>
+          )}
         </div>
+
+        {errors.submit && (
+          <div className="warning-bubble">
+            ⚠️ {errors.submit}
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: "10px" }}>
           <button type="submit">
@@ -211,7 +244,6 @@ function BeanManagement({ beans, setBeans }) {
         </div>
       </form>
 
-      {/* TABLE */}
       <table border="1" cellPadding="10" style={{ width: "100%" }}>
         <thead>
           <tr>
@@ -230,13 +262,17 @@ function BeanManagement({ beans, setBeans }) {
                 <td>{bean.name}</td>
                 <td>{bean.pricePerUnit}</td>
                 <td>{bean.unit}</td>
+
                 <td>
                   {bean.farmers.length
                     ? bean.farmers.map((f) => f.name).join(", ")
                     : "No farmers"}
                 </td>
+
                 <td>
-                  <button onClick={() => handleEdit(bean)}>Edit</button>{" "}
+                  <button onClick={() => handleEdit(bean)}>
+                    Edit
+                  </button>{" "}
                   <button onClick={() => handleDelete(bean.id)}>
                     Delete
                   </button>

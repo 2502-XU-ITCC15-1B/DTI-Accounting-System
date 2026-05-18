@@ -8,7 +8,7 @@ import {
 
 const router = express.Router();
 
-// 📸 file storage setup
+// file storage setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");

@@ -9,14 +9,10 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-/* -------------------------
-   PROTECTED ROUTES
--------------------------- */
+//protected routes
 router.use(protect);
 
-/* -------------------------
-   REPORT ROUTES
--------------------------- */
+//report routes
 
 // Generate monthly report
 router.post("/monthly", generateMonthlyReport);
@@ -27,9 +23,6 @@ router.post("/multi-month", generateMultiMonthReport);
 // Get summary (quick stats)
 router.get("/summary", getReportSummary);
 
-/* -------------------------
-   DEBUG (optional)
--------------------------- */
 router.get("/test", (req, res) => {
   res.json({
     message: "Report routes working",
