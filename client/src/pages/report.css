@@ -220,220 +220,133 @@
     padding: 0 !important;
     background: white !important;
     overflow: visible !important;
-    width: auto !important;
-    height: auto !important;
   }
 
-  .no-print,
+  /* hide whole app */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* show only report */
+  #report-content,
+  #report-content * {
+    visibility: visible !important;
+  }
+
+  #report-content {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: white !important;
+
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+
+    overflow: visible !important;
+  }
+
+  .report-module {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+  }
+
   .report-header,
   .report-controls,
   .generate-btn,
   .print-btn,
   .warning-bubble,
-  .error-message {
+  .error-message,
+  .no-print {
     display: none !important;
-  }
-
-  .report-module {
-    background: white !important;
-    min-height: auto !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
-  }
-
-  .report-content {
-    background: white !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
-
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-  }
-
-  .report-title {
-    text-align: center !important;
-    margin: 0 0 16px 0 !important;
-    padding: 0 0 8px 0 !important;
-    border-bottom: 1px solid #000 !important;
-    page-break-after: avoid !important;
-    break-after: avoid !important;
-  }
-
-  .report-title h2 {
-    font-size: 16px !important;
-    margin: 0 0 6px 0 !important;
-    color: black !important;
-  }
-
-  .report-title p,
-  .generated-date {
-    font-size: 10px !important;
-    margin: 3px 0 !important;
-    color: black !important;
-  }
-
-  .charts-section,
-  .organization-summary,
-  .monthly-breakdown,
-  .farmer-table-container,
-  .bean-breakdown {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 0 18px 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-    page-break-inside: auto !important;
-    break-inside: auto !important;
-  }
-
-  .charts-section h3,
-  .organization-summary h3,
-  .monthly-breakdown h3,
-  .farmer-table-container h3,
-  .bean-breakdown h4 {
-    font-size: 13px !important;
-    margin: 0 0 8px 0 !important;
-    color: black !important;
   }
 
   .charts-grid {
     display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    gap: 0 !important;
   }
 
   .chart-card {
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0 0 14px 0 !important;
+
+    margin-bottom: 16px !important;
     padding: 10px !important;
-    background: white !important;
+
     border: 1px solid #999 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+
     overflow: hidden !important;
+
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-  }
-
-  .chart-card h4 {
-    font-size: 11px !important;
-    margin: 0 0 8px 0 !important;
-    color: black !important;
-  }
-
-  .chart-wrapper-small {
-    height: 210px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-  }
-
-  .chart-wrapper-large {
-    height: 240px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-  }
-
-  canvas {
-    max-width: 100% !important;
   }
 
   .summary-cards {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 0 16px 0 !important;
   }
 
   .card {
     width: 100% !important;
     max-width: 100% !important;
-    padding: 10px !important;
-    min-height: 85px !important;
-    background: white !important;
-    color: black !important;
-    border: 1px solid #999 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+
     overflow: hidden !important;
+
+    border: 1px solid #999 !important;
+
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-  }
-
-  .card h4 {
-    font-size: 10px !important;
-    margin: 0 0 8px 0 !important;
-    color: black !important;
-  }
-
-  .card p {
-    font-size: 13px !important;
-    margin: 0 0 6px 0 !important;
-    color: black !important;
-  }
-
-  .card small {
-    font-size: 8px !important;
-    color: black !important;
-  }
-
-  .bean-breakdown {
-    background: white !important;
-    border-radius: 0 !important;
-    margin-top: 12px !important;
   }
 
   .table-responsive {
     width: 100% !important;
     max-width: 100% !important;
+
     overflow: visible !important;
-    margin-top: 10px !important;
   }
 
   .report-table {
     width: 100% !important;
     max-width: 100% !important;
+
     border-collapse: collapse !important;
     table-layout: fixed !important;
-    background: white !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
+
     font-size: 8.5px !important;
-    page-break-inside: auto !important;
   }
 
   .report-table th,
   .report-table td {
     border: 1px solid #000 !important;
+
     padding: 5px !important;
-    color: black !important;
-    text-align: left !important;
+
     overflow-wrap: anywhere !important;
     word-break: break-word !important;
   }
 
   .report-table th {
     background: #eee !important;
-    color: black !important;
-    font-size: 8px !important;
-    font-weight: 700 !important;
+
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  .report-table tr {
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  tr {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
@@ -444,27 +357,5 @@
 
   tfoot {
     display: table-footer-group !important;
-  }
-
-  .report-table tbody tr:hover {
-    background: white !important;
-  }
-
-  .report-table tfoot tr.total-row,
-  .total-row {
-    background: #eee !important;
-    color: black !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .sales-amount {
-    color: black !important;
-  }
-
-  .no-data {
-    color: black !important;
-    padding: 24px !important;
-    text-align: center !important;
   }
 }
