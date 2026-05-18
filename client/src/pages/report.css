@@ -423,19 +423,15 @@
 
 @media print {
   @page {
-    size: A4 portrait;
-    margin: 14mm;
+    margin: 12mm;
   }
 
   html,
   body {
-    width: 210mm;
-    min-height: 297mm;
-    background: white !important;
     margin: 0 !important;
     padding: 0 !important;
-    zoom: 1 !important;
-    transform: none !important;
+    background: white !important;
+    overflow: visible !important;
   }
 
   .no-print,
@@ -445,39 +441,23 @@
     display: none !important;
   }
 
-  .report-module {
-    background: white !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    min-height: auto !important;
-  }
-
+  .report-module,
   .report-content {
     width: 100% !important;
-    max-width: 180mm !important;
-    margin: 0 auto !important;
+    max-width: none !important;
+    margin: 0 !important;
     padding: 0 !important;
+    background: white !important;
     box-shadow: none !important;
     border: none !important;
-    background: white !important;
-    transform: none !important;
+    overflow: visible !important;
   }
 
   .report-title {
-    text-align: center;
-    margin-bottom: 14px !important;
-    page-break-after: avoid;
-  }
-
-  .report-title h2 {
-    font-size: 16px !important;
-    margin-bottom: 4px !important;
-  }
-
-  .report-title p,
-  .generated-date {
-    font-size: 10px !important;
+    text-align: center !important;
+    margin-bottom: 16px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid #000 !important;
   }
 
   .charts-section,
@@ -486,98 +466,82 @@
   .farmer-table-container,
   .bean-breakdown {
     width: 100% !important;
-    margin: 0 0 18px 0 !important;
-    padding: 0 !important;
-    page-break-inside: avoid;
-    break-inside: avoid;
+    margin-bottom: 18px !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .charts-grid {
+    display: block !important;
+  }
+
+  .chart-card {
+    width: 100% !important;
+    margin-bottom: 14px !important;
+    padding: 10px !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .chart-wrapper-small {
+    height: 210px !important;
+  }
+
+  .chart-wrapper-large {
+    height: 240px !important;
   }
 
   .summary-cards {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
-    width: 100% !important;
   }
 
   .card {
-    padding: 12px !important;
-    min-height: auto !important;
+    padding: 10px !important;
+    min-height: 85px !important;
     border: 1px solid #999 !important;
     box-shadow: none !important;
-    break-inside: avoid;
-  }
-
-  .card h4 {
-    font-size: 10px !important;
-    margin-bottom: 8px !important;
-  }
-
-  .card p {
-    font-size: 13px !important;
-    margin: 0 0 6px 0 !important;
-  }
-
-  .card small {
-    font-size: 8px !important;
-  }
-
-  .charts-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-  }
-
-  .chart-card {
-    padding: 10px !important;
-    box-shadow: none !important;
-    border: 1px solid #ccc !important;
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  .chart-wrapper-small {
-    height: 180px !important;
-  }
-
-  .chart-wrapper-large {
-    height: 220px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .table-responsive {
     overflow: visible !important;
-    width: 100% !important;
   }
 
   .report-table {
     width: 100% !important;
     border-collapse: collapse !important;
-    font-size: 9px !important;
-    table-layout: fixed !important;
+    table-layout: auto !important;
+    font-size: 8.5px !important;
   }
 
   .report-table th,
   .report-table td {
     padding: 5px !important;
     border: 1px solid #aaa !important;
-    word-break: break-word !important;
+    overflow-wrap: break-word !important;
   }
 
   .report-table th {
     background: #eee !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   thead {
-    display: table-header-group;
+    display: table-header-group !important;
   }
 
   tfoot {
-    display: table-footer-group;
+    display: table-footer-group !important;
   }
 
   tr {
-    page-break-inside: avoid;
-    break-inside: avoid;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
