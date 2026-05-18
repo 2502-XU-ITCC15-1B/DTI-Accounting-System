@@ -73,7 +73,11 @@ function BeanManagement({ beans, setBeans }) {
 
     const newErrors = {};
 
-    if (!form.name.trim()) {
+    const cleanedName = form.name.trim();
+    const cleanedPrice = Number(form.pricePerUnit);
+    const cleanedUnit = form.unit.trim();
+
+    if (!cleanedName) {
       newErrors.name = "Bean name is required";
     }
 
@@ -81,8 +85,21 @@ function BeanManagement({ beans, setBeans }) {
       newErrors.pricePerUnit = "Price is required";
     }
 
-    if (!form.unit.trim()) {
+    if (!cleanedUnit) {
       newErrors.unit = "Unit is required";
+    }
+
+    const duplicateBean = beans.find(
+      (bean) =>
+        bean.id !== form.id &&
+        bean.name.trim().toLowerCase() === cleanedName.toLowerCase() &&
+        Number(bean.pricePerUnit) === cleanedPrice &&
+        bean.unit.trim().toLowerCase() === cleanedUnit.toLowerCase()
+    );
+
+    if (duplicateBean) {
+      newErrors.submit =
+        "Duplicate bean already exists with the same name, price, and unit.";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -93,9 +110,9 @@ function BeanManagement({ beans, setBeans }) {
     setErrors({});
 
     const beanData = {
-      beanName: form.name.trim(),
-      pricePerUnit: Number(form.pricePerUnit),
-      unit: form.unit.trim(),
+      beanName: cleanedName,
+      pricePerUnit: cleanedPrice,
+      unit: cleanedUnit,
     };
 
     try {
@@ -186,11 +203,7 @@ function BeanManagement({ beans, setBeans }) {
             onChange={handleChange}
           />
 
-          {errors.name && (
-            <div className="error-bubble">
-              {errors.name}
-            </div>
-          )}
+          {errors.name && <div className="error-bubble">{errors.name}</div>}
         </div>
 
         <div>
@@ -203,9 +216,7 @@ function BeanManagement({ beans, setBeans }) {
           />
 
           {errors.pricePerUnit && (
-            <div className="error-bubble">
-              {errors.pricePerUnit}
-            </div>
+            <div className="error-bubble">{errors.pricePerUnit}</div>
           )}
         </div>
 
@@ -218,23 +229,15 @@ function BeanManagement({ beans, setBeans }) {
             onChange={handleChange}
           />
 
-          {errors.unit && (
-            <div className="error-bubble">
-              {errors.unit}
-            </div>
-          )}
+          {errors.unit && <div className="error-bubble">{errors.unit}</div>}
         </div>
 
         {errors.submit && (
-          <div className="warning-bubble">
-            ⚠️ {errors.submit}
-          </div>
+          <div className="warning-bubble">⚠️ {errors.submit}</div>
         )}
 
         <div style={{ display: "flex", gap: "10px" }}>
-          <button type="submit">
-            {isEditing ? "Update Bean" : "Add Bean"}
-          </button>
+          <button type="submit">{isEditing ? "Update Bean" : "Add Bean"}</button>
 
           {isEditing && (
             <button type="button" onClick={resetForm}>
@@ -270,12 +273,8 @@ function BeanManagement({ beans, setBeans }) {
                 </td>
 
                 <td>
-                  <button onClick={() => handleEdit(bean)}>
-                    Edit
-                  </button>{" "}
-                  <button onClick={() => handleDelete(bean.id)}>
-                    Delete
-                  </button>
+                  <button onClick={() => handleEdit(bean)}>Edit</button>{" "}
+                  <button onClick={() => handleDelete(bean.id)}>Delete</button>
                 </td>
               </tr>
             ))
