@@ -46,8 +46,18 @@ const ReportModule = () => {
   const [error, setError] = useState(null);
 
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const years = Array.from(
@@ -143,31 +153,91 @@ const ReportModule = () => {
       setExporting(true);
       setError(null);
 
-      const canvas = await html2canvas(report, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
+      const sections = report.querySelectorAll(
+        ".report-title, .charts-section, .organization-summary, .monthly-breakdown, .farmer-table-container, .no-data"
+      );
 
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
-
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      let heightLeft = imgHeight;
-      let position = 0;
+      const margin = 10;
+      const usableWidth = pageWidth - margin * 2;
+      let y = margin;
 
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      for (let i = 0; i < sections.length; i++) {
+        const section = sections[i];
 
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        const canvas = await html2canvas(section, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+        const imgHeight = (canvas.height * usableWidth) / canvas.width;
+
+        if (y + imgHeight > pageHeight - margin && y !== margin) {
+          pdf.addPage();
+          y = margin;
+        }
+
+        if (imgHeight > pageHeight - margin * 2) {
+          let sourceY = 0;
+
+          while (sourceY < canvas.height) {
+            const pageCanvas = document.createElement("canvas");
+            const pageCtx = pageCanvas.getContext("2d");
+
+            const sliceHeight = Math.min(
+              canvas.height - sourceY,
+              ((pageHeight - margin * 2) * canvas.width) / usableWidth
+            );
+
+            pageCanvas.width = canvas.width;
+            pageCanvas.height = sliceHeight;
+
+            pageCtx.drawImage(
+              canvas,
+              0,
+              sourceY,
+              canvas.width,
+              sliceHeight,
+              0,
+              0,
+              canvas.width,
+              sliceHeight
+            );
+
+            const pageImgData = pageCanvas.toDataURL("image/png");
+            const pageImgHeight =
+              (pageCanvas.height * usableWidth) / pageCanvas.width;
+
+            if (y !== margin) {
+              pdf.addPage();
+              y = margin;
+            }
+
+            pdf.addImage(
+              pageImgData,
+              "PNG",
+              margin,
+              y,
+              usableWidth,
+              pageImgHeight
+            );
+
+            sourceY += sliceHeight;
+
+            if (sourceY < canvas.height) {
+              pdf.addPage();
+              y = margin;
+            }
+          }
+        } else {
+          pdf.addImage(imgData, "PNG", margin, y, usableWidth, imgHeight);
+          y += imgHeight + 8;
+        }
       }
 
       pdf.save("DTI-Coffee-Bean-Report.pdf");
@@ -201,7 +271,9 @@ const ReportModule = () => {
 
   const getMonthlyArray = () => {
     if (Array.isArray(reportData?.data)) return reportData.data;
-    if (Array.isArray(reportData?.data?.monthlyData)) return reportData.data.monthlyData;
+    if (Array.isArray(reportData?.data?.monthlyData)) {
+      return reportData.data.monthlyData;
+    }
     if (Array.isArray(reportData?.monthlyData)) return reportData.monthlyData;
     return [];
   };
@@ -211,6 +283,7 @@ const ReportModule = () => {
 
     if (rangeType === "single") {
       const org = getOrganization();
+
       if (!org) return null;
 
       const barData = {
@@ -489,6 +562,7 @@ const ReportModule = () => {
         <div className="report-content" id="report-content">
           <div className="report-title">
             <h2>DTI Coffee Bean Trading Report</h2>
+
             <p>
               {rangeType === "single"
                 ? `${months[month - 1]} ${year}`
@@ -496,6 +570,7 @@ const ReportModule = () => {
                     months[endMonth - 1]
                   } ${endYear}`}
             </p>
+
             <p className="generated-date">
               Generated on: {new Date().toLocaleString()}
             </p>

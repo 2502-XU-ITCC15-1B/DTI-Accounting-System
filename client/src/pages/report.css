@@ -420,3 +420,83 @@
   font-weight: 500;
   border: 1px solid #fdba74;
 }
+
+@media print {
+  body {
+    background: white !important;
+  }
+
+  .no-print,
+  .report-header,
+  .report-controls,
+  .warning-bubble {
+    display: none !important;
+  }
+
+  .report-module {
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  .report-content {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 20px !important;
+    box-shadow: none !important;
+    background: white !important;
+  }
+
+  .report-title,
+  .charts-section,
+  .organization-summary,
+  .monthly-breakdown,
+  .farmer-table-container,
+  .chart-card,
+  .bean-breakdown {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  table {
+    page-break-inside: auto;
+    border-collapse: collapse !important;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  .report-table {
+    width: 100% !important;
+    font-size: 10px !important;
+  }
+
+  .report-table th,
+  .report-table td {
+    padding: 6px !important;
+    border: 1px solid #ccc !important;
+  }
+
+  .charts-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 15px !important;
+  }
+
+  .chart-wrapper-small {
+    height: 230px !important;
+  }
+
+  .chart-wrapper-large {
+    height: 280px !important;
+  }
+}
