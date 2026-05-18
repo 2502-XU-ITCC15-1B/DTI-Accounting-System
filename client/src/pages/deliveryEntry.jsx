@@ -20,6 +20,7 @@ function DeliveryEntry() {
   const [file, setFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [expandedId, setExpandedId] = useState(null);
+  const [imageErrors, setImageErrors] = useState({});
 
   const [deleteId, setDeleteId] = useState(null);
   const [deletePassword, setDeletePassword] = useState("");
@@ -46,6 +47,11 @@ function DeliveryEntry() {
 
   const [form, setForm] = useState(emptyForm);
 
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+    return String(date).slice(0, 10);
+  };
+
   const getProofImageUrl = (delivery) => {
     const proof =
       delivery.proofOfDelivery ||
@@ -53,21 +59,33 @@ function DeliveryEntry() {
       delivery.image ||
       delivery.imageUrl ||
       delivery.filePath ||
-      delivery.photo;
+      delivery.photo ||
+      "";
 
     if (!proof) return "";
 
-    if (proof.startsWith("http")) {
-      return proof;
+    const cleanProof = String(proof).replace(/\\/g, "/");
+
+    if (
+      cleanProof.startsWith("http://") ||
+      cleanProof.startsWith("https://") ||
+      cleanProof.startsWith("data:") ||
+      cleanProof.startsWith("blob:")
+    ) {
+      return cleanProof;
     }
 
-    const cleanPath = proof.replace(/\\/g, "/");
+    const cleanAPI = API.replace(/\/$/, "");
 
-    if (cleanPath.startsWith("/")) {
-      return `${API}${cleanPath}`;
+    if (cleanProof.startsWith("/uploads/")) {
+      return `${cleanAPI}${cleanProof}`;
     }
 
-    return `${API}/${cleanPath}`;
+    if (cleanProof.startsWith("uploads/")) {
+      return `${cleanAPI}/${cleanProof}`;
+    }
+
+    return `${cleanAPI}/uploads/${cleanProof}`;
   };
 
   const fetchData = async () => {
@@ -293,25 +311,40 @@ function DeliveryEntry() {
             {deliveries.map((d) => {
               const isExpanded = expandedId === d._id;
               const proofImageUrl = getProofImageUrl(d);
+              const hasImageError = imageErrors[d._id];
 
               return (
-                <div key={d._id} className="delivery-item">
+                <div
+                  key={d._id}
+                  className="delivery-item"
+                  style={{
+                    display: "block",
+                    padding: "16px",
+                    borderRadius: "14px",
+                    marginBottom: "14px",
+                  }}
+                >
                   <div
                     onClick={() => setExpandedId(isExpanded ? null : d._id)}
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      gap: "10px",
+                      gap: "12px",
                       cursor: "pointer",
                       width: "100%",
                     }}
                   >
-                    <span>
-                      {isExpanded ? "▼" : "▶"} {d.farmer} • {d.beanType} •{" "}
-                      {d.date?.slice(0, 10)} • Volume: {d.volume ?? 0} • Price:{" "}
-                      {d.pricePerUnit ?? 0} • Total: {d.totalAmount ?? 0}
-                    </span>
+                    <div>
+                      <strong>
+                        {isExpanded ? "▼" : "▶"} {d.farmer || "Unknown Farmer"}
+                      </strong>
+
+                      <div style={{ fontSize: "13px", marginTop: "4px" }}>
+                        {d.beanType || "N/A"} • {formatDate(d.date)} • Volume:{" "}
+                        {d.volume ?? 0} • Total: ₱{d.totalAmount ?? 0}
+                      </div>
+                    </div>
 
                     <button
                       className="delete-btn"
@@ -328,79 +361,123 @@ function DeliveryEntry() {
                     <div
                       className="delivery-details"
                       style={{
-                        marginTop: "12px",
-                        padding: "12px",
+                        marginTop: "16px",
+                        padding: "16px",
                         borderTop: "1px solid #ddd",
-                        display: "grid",
-                        gap: "8px",
+                        background: "#f9fafb",
+                        borderRadius: "12px",
                       }}
                     >
-                      <p>
-                        <strong>Farmer:</strong> {d.farmer || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Farmer Contact:</strong>{" "}
-                        {d.farmerContact || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Bean Type:</strong> {d.beanType || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Volume:</strong> {d.volume ?? 0}
-                      </p>
-                      <p>
-                        <strong>Price Per Unit:</strong> ₱
-                        {d.pricePerUnit ?? 0}
-                      </p>
-                      <p>
-                        <strong>Total Amount:</strong> ₱
-                        {d.totalAmount ?? 0}
-                      </p>
-                      <p>
-                        <strong>Courier:</strong> {d.courier || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Date:</strong>{" "}
-                        {d.date ? d.date.slice(0, 10) : "N/A"}
-                      </p>
-                      <p>
-                        <strong>Delivery Guy:</strong>{" "}
-                        {d.deliveryGuy || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Delivery Guy Contact:</strong>{" "}
-                        {d.deliveryGuyContact || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Consignee:</strong> {d.consignee || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Consignee Contact:</strong>{" "}
-                        {d.consigneeContact || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Recorded By:</strong>{" "}
-                        {d.recordedBy || "N/A"}
-                      </p>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns:
+                            "repeat(auto-fit, minmax(180px, 1fr))",
+                          gap: "12px",
+                        }}
+                      >
+                        <div>
+                          <small>Farmer</small>
+                          <p><strong>{d.farmer || "N/A"}</strong></p>
+                        </div>
 
-                      <div>
-                        <strong>Proof of Delivery:</strong>
+                        <div>
+                          <small>Farmer Contact</small>
+                          <p><strong>{d.farmerContact || "N/A"}</strong></p>
+                        </div>
 
-                        {proofImageUrl ? (
-                          <div style={{ marginTop: "8px" }}>
+                        <div>
+                          <small>Bean Type</small>
+                          <p><strong>{d.beanType || "N/A"}</strong></p>
+                        </div>
+
+                        <div>
+                          <small>Volume</small>
+                          <p><strong>{d.volume ?? 0}</strong></p>
+                        </div>
+
+                        <div>
+                          <small>Price Per Unit</small>
+                          <p><strong>₱{d.pricePerUnit ?? 0}</strong></p>
+                        </div>
+
+                        <div>
+                          <small>Total Amount</small>
+                          <p><strong>₱{d.totalAmount ?? 0}</strong></p>
+                        </div>
+
+                        <div>
+                          <small>Courier</small>
+                          <p><strong>{d.courier || "N/A"}</strong></p>
+                        </div>
+
+                        <div>
+                          <small>Date</small>
+                          <p><strong>{formatDate(d.date)}</strong></p>
+                        </div>
+
+                        <div>
+                          <small>Delivery Guy</small>
+                          <p><strong>{d.deliveryGuy || "N/A"}</strong></p>
+                        </div>
+
+                        <div>
+                          <small>Delivery Guy Contact</small>
+                          <p><strong>{d.deliveryGuyContact || "N/A"}</strong></p>
+                        </div>
+
+                        <div>
+                          <small>Consignee</small>
+                          <p><strong>{d.consignee || "N/A"}</strong></p>
+                        </div>
+
+                        <div>
+                          <small>Consignee Contact</small>
+                          <p><strong>{d.consigneeContact || "N/A"}</strong></p>
+                        </div>
+
+                        <div>
+                          <small>Recorded By</small>
+                          <p><strong>{d.recordedBy || "N/A"}</strong></p>
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: "18px" }}>
+                        <small>Proof of Delivery</small>
+
+                        {proofImageUrl && !hasImageError ? (
+                          <div
+                            style={{
+                              marginTop: "8px",
+                              padding: "10px",
+                              background: "#fff",
+                              border: "1px solid #ddd",
+                              borderRadius: "12px",
+                              maxWidth: "420px",
+                            }}
+                          >
                             <img
                               src={proofImageUrl}
                               alt="Proof of Delivery"
+                              onError={() =>
+                                setImageErrors((prev) => ({
+                                  ...prev,
+                                  [d._id]: true,
+                                }))
+                              }
                               style={{
-                                maxWidth: "320px",
                                 width: "100%",
+                                maxHeight: "300px",
+                                objectFit: "contain",
                                 borderRadius: "10px",
-                                border: "1px solid #ccc",
+                                display: "block",
                               }}
                             />
                           </div>
                         ) : (
-                          <p>No proof of delivery uploaded.</p>
+                          <p style={{ marginTop: "6px" }}>
+                            No viewable proof of delivery uploaded.
+                          </p>
                         )}
                       </div>
                     </div>
