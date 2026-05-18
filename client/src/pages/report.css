@@ -1,222 +1,5 @@
-/* Print styles */
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 12mm;
-  }
-
-  html,
-  body {
-    background: white !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-  }
-
-  body * {
-    visibility: hidden !important;
-  }
-
-  #report-content,
-  #report-content * {
-    visibility: visible !important;
-  }
-
-  #report-content {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 20px !important;
-    background: white !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-  }
-
-  .report-header,
-  .report-controls,
-  .generate-btn,
-  .print-btn,
-  .error-message {
-    display: none !important;
-  }
-
-  .report-title {
-    margin-bottom: 20px !important;
-    padding-bottom: 12px !important;
-    border-bottom: 1px solid #000 !important;
-  }
-
-  .report-title h2 {
-    font-size: 18px !important;
-    margin-bottom: 6px !important;
-    color: black !important;
-  }
-
-  .report-title p,
-  .generated-date {
-    font-size: 11px !important;
-    color: black !important;
-  }
-
-  .charts-section,
-  .organization-summary,
-  .farmer-table-container,
-  .monthly-breakdown {
-    margin-bottom: 24px !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  .charts-section h3,
-  .organization-summary h3,
-  .farmer-table-container h3,
-  .monthly-breakdown h3 {
-    font-size: 14px !important;
-    margin-bottom: 10px !important;
-    color: black !important;
-  }
-
-  .charts-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 12px !important;
-  }
-
-  .chart-card {
-    background: white !important;
-    box-shadow: none !important;
-    border: 1px solid #999 !important;
-    border-radius: 0 !important;
-    padding: 14px !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  .chart-card h4 {
-    font-size: 11px !important;
-    margin-bottom: 8px !important;
-    color: black !important;
-  }
-
-  .chart-wrapper-small {
-    height: 170px !important;
-  }
-
-  .chart-wrapper-large {
-    height: 220px !important;
-  }
-
-  canvas {
-    max-width: 100% !important;
-    max-height: 220px !important;
-  }
-
-  .summary-cards {
-    display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 10px !important;
-    margin-bottom: 18px !important;
-  }
-
-  .card {
-    background: white !important;
-    color: black !important;
-    border: 1px solid #999 !important;
-    border-radius: 0 !important;
-    padding: 12px !important;
-    box-shadow: none !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  .card h4 {
-    font-size: 10px !important;
-    margin-bottom: 6px !important;
-    color: black !important;
-  }
-
-  .card p {
-    font-size: 14px !important;
-    margin-bottom: 4px !important;
-    color: black !important;
-  }
-
-  .card small {
-    font-size: 9px !important;
-    color: black !important;
-  }
-
-  .bean-breakdown {
-    background: white !important;
-    padding: 12px !important;
-    border-radius: 0 !important;
-    margin-top: 12px !important;
-  }
-
-  .bean-breakdown h4 {
-    font-size: 12px !important;
-    margin-bottom: 8px !important;
-    color: black !important;
-  }
-
-  .table-responsive {
-    overflow: visible !important;
-    margin-top: 10px !important;
-  }
-
-  .report-table {
-    width: 100% !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    font-size: 10px !important;
-    page-break-inside: auto !important;
-  }
-
-  .report-table th,
-  .report-table td {
-    border: 1px solid #000 !important;
-    padding: 6px 8px !important;
-    color: black !important;
-  }
-
-  .report-table th {
-    background: #eee !important;
-    color: black !important;
-    font-size: 9px !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .report-table tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  .report-table tbody tr:hover {
-    background: white !important;
-  }
-
-  .report-table tfoot tr.total-row {
-    background: #eee !important;
-    color: black !important;
-  }
-
-  .sales-amount {
-    color: black !important;
-  }
-
-  .no-data {
-    color: black !important;
-    padding: 24px !important;
-    text-align: center !important;
-  }
-}
-
 .report-module {
-  background-color: #ECFDF5 !important;
+  background-color: #ecfdf5 !important;
   min-height: 100vh;
   padding: 24px;
 }
@@ -365,7 +148,6 @@
   color: #6b7280;
 }
 
-
 .bean-breakdown {
   background: #f9fafb !important;
   padding: 20px !important;
@@ -376,7 +158,6 @@
 .bean-breakdown h4 {
   margin-bottom: 14px;
 }
-
 
 .table-responsive {
   overflow-x: auto;
@@ -409,7 +190,7 @@
   padding: 40px 20px !important;
   text-align: center;
 }
- 
+
 .warning-bubble {
   margin-top: 20px;
   margin-bottom: 20px;
@@ -421,9 +202,16 @@
   border: 1px solid #fdba74;
 }
 
+/* PRINT ONLY */
 @media print {
   @page {
-    margin: 12mm;
+    margin: 15mm;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box !important;
   }
 
   html,
@@ -432,32 +220,63 @@
     padding: 0 !important;
     background: white !important;
     overflow: visible !important;
+    width: auto !important;
+    height: auto !important;
   }
 
   .no-print,
   .report-header,
   .report-controls,
-  .warning-bubble {
+  .generate-btn,
+  .print-btn,
+  .warning-bubble,
+  .error-message {
     display: none !important;
   }
 
-  .report-module,
-  .report-content {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
+  .report-module {
     background: white !important;
+    min-height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .report-content {
+    background: white !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
     border: none !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     overflow: visible !important;
   }
 
   .report-title {
     text-align: center !important;
-    margin-bottom: 16px !important;
-    padding-bottom: 8px !important;
+    margin: 0 0 16px 0 !important;
+    padding: 0 0 8px 0 !important;
     border-bottom: 1px solid #000 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .report-title h2 {
+    font-size: 16px !important;
+    margin: 0 0 6px 0 !important;
+    color: black !important;
+  }
+
+  .report-title p,
+  .generated-date {
+    font-size: 10px !important;
+    margin: 3px 0 !important;
+    color: black !important;
   }
 
   .charts-section,
@@ -466,70 +285,157 @@
   .farmer-table-container,
   .bean-breakdown {
     width: 100% !important;
-    margin-bottom: 18px !important;
+    max-width: 100% !important;
+    margin: 0 0 18px 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
     page-break-inside: auto !important;
     break-inside: auto !important;
   }
 
+  .charts-section h3,
+  .organization-summary h3,
+  .monthly-breakdown h3,
+  .farmer-table-container h3,
+  .bean-breakdown h4 {
+    font-size: 13px !important;
+    margin: 0 0 8px 0 !important;
+    color: black !important;
+  }
+
   .charts-grid {
     display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 0 !important;
   }
 
   .chart-card {
     width: 100% !important;
-    margin-bottom: 14px !important;
+    max-width: 100% !important;
+    margin: 0 0 14px 0 !important;
     padding: 10px !important;
-    border: 1px solid #ccc !important;
+    background: white !important;
+    border: 1px solid #999 !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
+    overflow: hidden !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
+  .chart-card h4 {
+    font-size: 11px !important;
+    margin: 0 0 8px 0 !important;
+    color: black !important;
+  }
+
   .chart-wrapper-small {
     height: 210px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
   }
 
   .chart-wrapper-large {
     height: 240px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  canvas {
+    max-width: 100% !important;
   }
 
   .summary-cards {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 16px 0 !important;
   }
 
   .card {
+    width: 100% !important;
+    max-width: 100% !important;
     padding: 10px !important;
     min-height: 85px !important;
+    background: white !important;
+    color: black !important;
     border: 1px solid #999 !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
+    overflow: hidden !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
+  .card h4 {
+    font-size: 10px !important;
+    margin: 0 0 8px 0 !important;
+    color: black !important;
+  }
+
+  .card p {
+    font-size: 13px !important;
+    margin: 0 0 6px 0 !important;
+    color: black !important;
+  }
+
+  .card small {
+    font-size: 8px !important;
+    color: black !important;
+  }
+
+  .bean-breakdown {
+    background: white !important;
+    border-radius: 0 !important;
+    margin-top: 12px !important;
+  }
+
   .table-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
     overflow: visible !important;
+    margin-top: 10px !important;
   }
 
   .report-table {
     width: 100% !important;
+    max-width: 100% !important;
     border-collapse: collapse !important;
-    table-layout: auto !important;
+    table-layout: fixed !important;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
     font-size: 8.5px !important;
+    page-break-inside: auto !important;
   }
 
   .report-table th,
   .report-table td {
+    border: 1px solid #000 !important;
     padding: 5px !important;
-    border: 1px solid #aaa !important;
-    overflow-wrap: break-word !important;
+    color: black !important;
+    text-align: left !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
   }
 
   .report-table th {
     background: #eee !important;
+    color: black !important;
+    font-size: 8px !important;
+    font-weight: 700 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  .report-table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   thead {
@@ -540,8 +446,25 @@
     display: table-footer-group !important;
   }
 
-  tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+  .report-table tbody tr:hover {
+    background: white !important;
+  }
+
+  .report-table tfoot tr.total-row,
+  .total-row {
+    background: #eee !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .sales-amount {
+    color: black !important;
+  }
+
+  .no-data {
+    color: black !important;
+    padding: 24px !important;
+    text-align: center !important;
   }
 }
