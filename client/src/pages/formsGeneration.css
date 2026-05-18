@@ -1,0 +1,18 @@
+.error-bubble,
+.warning-bubble {
+  display: block;
+  width: fit-content;
+  margin: 4px 0 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff7ed;
+  color: #b45309;
+  border: 1px solid #fb923c;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.input-error {
+  border-color: #fb923c !important;
+  background: #fff7ed !important;
+}

@@ -117,15 +117,17 @@
   background: #fff7f7 !important;
 }
 
+.warning-bubble,
 .error-bubble {
-  display: block;
-  margin-top: 4px;
+  background: #fff4e5;
+  border: 1px solid #f5c26b;
+  color: #8a5700;
   padding: 6px 10px;
-  background: #fee2e2;
-  color: #b91c1c;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 12px;
-  width: fit-content;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  display: inline-block;
 }
 
 .error-text {

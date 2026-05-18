@@ -3,6 +3,7 @@ import axios from "axios";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
+import "./formsGeneration.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
