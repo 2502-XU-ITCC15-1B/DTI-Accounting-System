@@ -422,8 +422,20 @@
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm;
+  }
+
+  html,
   body {
+    width: 210mm;
+    min-height: 297mm;
     background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    zoom: 1 !important;
+    transform: none !important;
   }
 
   .no-print,
@@ -434,37 +446,126 @@
   }
 
   .report-module {
-    padding: 0 !important;
     background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
   }
 
   .report-content {
     width: 100% !important;
-    max-width: none !important;
-    padding: 20px !important;
+    max-width: 180mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
     box-shadow: none !important;
+    border: none !important;
     background: white !important;
+    transform: none !important;
   }
 
-  .report-title,
+  .report-title {
+    text-align: center;
+    margin-bottom: 14px !important;
+    page-break-after: avoid;
+  }
+
+  .report-title h2 {
+    font-size: 16px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .report-title p,
+  .generated-date {
+    font-size: 10px !important;
+  }
+
   .charts-section,
   .organization-summary,
   .monthly-breakdown,
   .farmer-table-container,
-  .chart-card,
   .bean-breakdown {
+    width: 100% !important;
+    margin: 0 0 18px 0 !important;
+    padding: 0 !important;
+    page-break-inside: avoid;
     break-inside: avoid;
-    page-break-inside: avoid;
   }
 
-  table {
-    page-break-inside: auto;
+  .summary-cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .card {
+    padding: 12px !important;
+    min-height: auto !important;
+    border: 1px solid #999 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .card h4 {
+    font-size: 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .card p {
+    font-size: 13px !important;
+    margin: 0 0 6px 0 !important;
+  }
+
+  .card small {
+    font-size: 8px !important;
+  }
+
+  .charts-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .chart-card {
+    padding: 10px !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .chart-wrapper-small {
+    height: 180px !important;
+  }
+
+  .chart-wrapper-large {
+    height: 220px !important;
+  }
+
+  .table-responsive {
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  .report-table {
+    width: 100% !important;
     border-collapse: collapse !important;
+    font-size: 9px !important;
+    table-layout: fixed !important;
   }
 
-  tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
+  .report-table th,
+  .report-table td {
+    padding: 5px !important;
+    border: 1px solid #aaa !important;
+    word-break: break-word !important;
+  }
+
+  .report-table th {
+    background: #eee !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   thead {
@@ -475,28 +576,8 @@
     display: table-footer-group;
   }
 
-  .report-table {
-    width: 100% !important;
-    font-size: 10px !important;
-  }
-
-  .report-table th,
-  .report-table td {
-    padding: 6px !important;
-    border: 1px solid #ccc !important;
-  }
-
-  .charts-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 15px !important;
-  }
-
-  .chart-wrapper-small {
-    height: 230px !important;
-  }
-
-  .chart-wrapper-large {
-    height: 280px !important;
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 }
