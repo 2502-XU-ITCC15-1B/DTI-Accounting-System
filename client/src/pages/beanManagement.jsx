@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { authFetch } from "../utils/authFetch";
+import "./admin.css";
 
 function BeanManagement({ beans, setBeans }) {
   const [form, setForm] = useState({
@@ -10,6 +11,8 @@ function BeanManagement({ beans, setBeans }) {
   });
 
   const [isEditing, setIsEditing] = useState(false);
+
+  const [errors, setErrors] = useState({});
 
   // LOAD FROM BACKEND
   useEffect(() => {
@@ -42,6 +45,8 @@ function BeanManagement({ beans, setBeans }) {
       pricePerUnit: "",
       unit: "kg",
     });
+
+    setErrors({});
     setIsEditing(false);
   };
 
@@ -50,16 +55,37 @@ function BeanManagement({ beans, setBeans }) {
       ...prev,
       [e.target.name]: e.target.value,
     }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [e.target.name]: "",
+    }));
   };
 
   // CREATE / UPDATE
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name.trim() || !form.pricePerUnit || !form.unit.trim()) {
-      alert("Please fill in bean name, price per unit, and unit.");
+    const newErrors = {};
+
+    if (!form.name.trim()) {
+      newErrors.name = "Bean name is required";
+    }
+
+    if (!form.pricePerUnit) {
+      newErrors.pricePerUnit = "Price is required";
+    }
+
+    if (!form.unit.trim()) {
+      newErrors.unit = "Unit is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
 
     const beanData = {
       beanName: form.name.trim(),
@@ -97,6 +123,10 @@ function BeanManagement({ beans, setBeans }) {
       resetForm();
     } catch (err) {
       console.error(err);
+
+      setErrors({
+        submit: "Failed to save bean.",
+      });
     }
   };
 
@@ -107,12 +137,17 @@ function BeanManagement({ beans, setBeans }) {
       pricePerUnit: bean.pricePerUnit,
       unit: bean.unit,
     });
+
+    setErrors({});
     setIsEditing(true);
   };
 
   // DELETE
   const handleDelete = async (id) => {
-    const confirmed = window.confirm("Are you sure you want to delete this bean?");
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this bean?"
+    );
+
     if (!confirmed) return;
 
     try {
@@ -123,11 +158,15 @@ function BeanManagement({ beans, setBeans }) {
       setBeans((prev) => prev.filter((bean) => bean.id !== id));
     } catch (err) {
       console.error(err);
+
+      setErrors({
+        submit: "Failed to delete bean.",
+      });
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div className="admin-container">
       <h2>Bean Management</h2>
 
       {/* FORM */}
@@ -140,29 +179,59 @@ function BeanManagement({ beans, setBeans }) {
           maxWidth: "700px",
         }}
       >
-        <input
-          type="text"
-          name="name"
-          placeholder="Bean name"
-          value={form.name}
-          onChange={handleChange}
-        />
+        <div>
+          <input
+            type="text"
+            name="name"
+            placeholder="Bean name"
+            value={form.name}
+            onChange={handleChange}
+          />
 
-        <input
-          type="number"
-          name="pricePerUnit"
-          placeholder="Price per unit"
-          value={form.pricePerUnit}
-          onChange={handleChange}
-        />
+          {errors.name && (
+            <div className="error-bubble">
+              {errors.name}
+            </div>
+          )}
+        </div>
 
-        <input
-          type="text"
-          name="unit"
-          placeholder="Unit"
-          value={form.unit}
-          onChange={handleChange}
-        />
+        <div>
+          <input
+            type="number"
+            name="pricePerUnit"
+            placeholder="Price per unit"
+            value={form.pricePerUnit}
+            onChange={handleChange}
+          />
+
+          {errors.pricePerUnit && (
+            <div className="error-bubble">
+              {errors.pricePerUnit}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <input
+            type="text"
+            name="unit"
+            placeholder="Unit"
+            value={form.unit}
+            onChange={handleChange}
+          />
+
+          {errors.unit && (
+            <div className="error-bubble">
+              {errors.unit}
+            </div>
+          )}
+        </div>
+
+        {errors.submit && (
+          <div className="warning-bubble">
+            ⚠️ {errors.submit}
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: "10px" }}>
           <button type="submit">
@@ -196,13 +265,17 @@ function BeanManagement({ beans, setBeans }) {
                 <td>{bean.name}</td>
                 <td>{bean.pricePerUnit}</td>
                 <td>{bean.unit}</td>
+
                 <td>
                   {bean.farmers.length
                     ? bean.farmers.map((f) => f.name).join(", ")
                     : "No farmers"}
                 </td>
+
                 <td>
-                  <button onClick={() => handleEdit(bean)}>Edit</button>{" "}
+                  <button onClick={() => handleEdit(bean)}>
+                    Edit
+                  </button>{" "}
                   <button onClick={() => handleDelete(bean.id)}>
                     Delete
                   </button>
