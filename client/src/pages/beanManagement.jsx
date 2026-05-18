@@ -10,9 +10,8 @@ function BeanManagement({ beans, setBeans }) {
   });
 
   const [isEditing, setIsEditing] = useState(false);
-  const [errors, setErrors] = useState({});
 
-  // 🔄 LOAD FROM BACKEND
+  // LOAD FROM BACKEND
   useEffect(() => {
     const fetchBeans = async () => {
       try {
@@ -53,20 +52,13 @@ function BeanManagement({ beans, setBeans }) {
     }));
   };
 
-  // 🔥 CREATE / UPDATE
+  // CREATE / UPDATE
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!form.name.trim() || !form.pricePerUnit || !form.unit.trim()) {
-      const newErrors = {};
-      if (!form.name.trim()) newErrors.name = "Bean name is required";
-      if (!form.pricePerUnit) newErrors.pricePerUnit = "Price is required";
-      if (!form.unit.trim()) newErrors.unit = "Unit is required";
-
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return;
-      }
+      alert("Please fill in bean name, price per unit, and unit.");
+      return;
     }
 
     const beanData = {
@@ -118,7 +110,7 @@ function BeanManagement({ beans, setBeans }) {
     setIsEditing(true);
   };
 
-  // 🔥 DELETE
+  // DELETE
   const handleDelete = async (id) => {
     const confirmed = window.confirm("Are you sure you want to delete this bean?");
     if (!confirmed) return;
@@ -132,17 +124,6 @@ function BeanManagement({ beans, setBeans }) {
     } catch (err) {
       console.error(err);
     }
-  };
-
-    const bubbleStyle = {
-    background: "#fff4e5",
-    border: "1px solid #f5c26b",
-    color: "#8a5700",
-    padding: "6px 10px",
-    borderRadius: "12px",
-    fontSize: "12px",
-    marginTop: "4px",
-    display: "inline-block",
   };
 
   return (
@@ -159,7 +140,6 @@ function BeanManagement({ beans, setBeans }) {
           maxWidth: "700px",
         }}
       >
-        <div>
         <input
           type="text"
           name="name"
@@ -167,12 +147,7 @@ function BeanManagement({ beans, setBeans }) {
           value={form.name}
           onChange={handleChange}
         />
-          {errors.name && (
-          <div style={bubbleStyle}>{errors.name}</div>
-          )}
-        </div>
 
-        <div>
         <input
           type="number"
           name="pricePerUnit"
@@ -180,12 +155,7 @@ function BeanManagement({ beans, setBeans }) {
           value={form.pricePerUnit}
           onChange={handleChange}
         />
-          {errors.pricePerUnit && (
-          <div style={bubbleStyle}>{errors.pricePerUnit}</div>
-          )}
-        </div>
 
-        <div>
         <input
           type="text"
           name="unit"
@@ -193,10 +163,6 @@ function BeanManagement({ beans, setBeans }) {
           value={form.unit}
           onChange={handleChange}
         />
-        {errors.unit && (
-        <div style={bubbleStyle}>{errors.unit}</div>
-        )}
-        </div>
 
         <div style={{ display: "flex", gap: "10px" }}>
           <button type="submit">

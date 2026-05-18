@@ -111,12 +111,6 @@
   color: #444;
 }
 
-/* VALIDATION */
-.input-error {
-  border-color: #dc2626 !important;
-  background: #fff7f7 !important;
-}
-
 .warning-bubble,
 .error-bubble {
   background: #fff4e5;
