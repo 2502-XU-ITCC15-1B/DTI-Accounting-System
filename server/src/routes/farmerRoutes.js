@@ -10,7 +10,7 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// 🔐 protect all routes
+// protect all routes
 router.use(protect);
 
 // GET all farmers / CREATE farmer

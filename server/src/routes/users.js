@@ -20,9 +20,7 @@ const isHashedPassword = (password = "") => {
   );
 };
 
-/* -------------------------
-   GET USERS
--------------------------- */
+//get users
 router.get("/", protect, adminOnly, async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
@@ -36,9 +34,7 @@ router.get("/", protect, adminOnly, async (req, res) => {
   }
 });
 
-/* -------------------------
-   CREATE / SYNC USER
--------------------------- */
+//user sync
 router.post("/", protect, adminOnly, async (req, res) => {
   try {
     const {

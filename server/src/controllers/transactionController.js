@@ -1,9 +1,6 @@
 import Transaction from "../models/transaction.js";
 import Payment from "../models/payment.js";
 
-/* -------------------------
-   SUMMARY (Transaction + Payments)
--------------------------- */
 export const getDeliverySummary = async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
@@ -44,9 +41,7 @@ export const getDeliverySummary = async (req, res) => {
   }
 };
 
-/* -------------------------
-   GET ALL TRANSACTIONS
--------------------------- */
+// get all transactions
 export const getTransactions = async (req, res) => {
   try {
     const { farmerName, startDate, endDate, beanType } = req.query;
@@ -81,9 +76,7 @@ export const getTransactions = async (req, res) => {
   }
 };
 
-/* -------------------------
-   UPDATE TRANSACTION
--------------------------- */
+//update transaction
 export const updateTransaction = async (req, res) => {
   try {
     const { id } = req.params;
