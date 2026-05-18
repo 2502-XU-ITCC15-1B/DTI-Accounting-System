@@ -35,6 +35,9 @@ function FarmerManagement() {
   const isMongoId = (val) =>
     /^[0-9a-fA-F]{24}$/.test(String(val));
 
+  const normalize = (value) =>
+    String(value || "").toLowerCase().trim();
+
   const fetchData = async () => {
     try {
       const [farmersRes, beansRes] = await Promise.all([
@@ -127,8 +130,35 @@ function FarmerManagement() {
       (b) => String(b).trim() !== ""
     );
 
+    const existingFarmers = farmers.filter(
+      (farmer) => farmer.id !== form.id
+    );
+
+    const farmerIDExists = existingFarmers.some(
+      (farmer) =>
+        normalize(farmer.farmerID) === normalize(form.farmerID)
+    );
+
+    const farmerNameExists = existingFarmers.some(
+      (farmer) =>
+        normalize(farmer.name) === normalize(form.name)
+    );
+
+    const contactNumberExists = existingFarmers.some(
+      (farmer) =>
+        String(farmer.contactNumber || "").trim() ===
+        String(form.contactNumber || "").trim()
+    );
+
+    const emailAddressExists = existingFarmers.some(
+      (farmer) =>
+        normalize(farmer.emailAddress) === normalize(form.emailAddress)
+    );
+
     if (!form.farmerID.trim()) {
       newErrors.farmerID = "Farmer ID required";
+    } else if (farmerIDExists) {
+      newErrors.farmerID = "Farmer ID already exists";
     }
 
     if (!form.name.trim()) {
@@ -142,6 +172,8 @@ function FarmerManagement() {
       if (wordCount < 3) {
         newErrors.name =
           "Include first name, middle name, and surname. Use N/A if no middle name.";
+      } else if (farmerNameExists) {
+        newErrors.name = "Farmer name already exists";
       }
     }
 
@@ -167,10 +199,18 @@ function FarmerManagement() {
     } else if (!/^\d{11}$/.test(form.contactNumber)) {
       newErrors.contactNumber =
         "Contact number must be exactly 11 digits";
+    } else if (contactNumberExists) {
+      newErrors.contactNumber = "Contact number already exists";
     }
 
     if (!form.emailAddress.trim()) {
       newErrors.emailAddress = "Email required";
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailAddress)
+    ) {
+      newErrors.emailAddress = "Enter a valid email address";
+    } else if (emailAddressExists) {
+      newErrors.emailAddress = "Email already exists";
     }
 
     if (selectedBeans.length === 0) {
