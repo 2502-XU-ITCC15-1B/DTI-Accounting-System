@@ -28,8 +28,8 @@ const app = express();
 app.use(cors());
 
 // Increased limit for base64 proof images from Electron sync
-app.use(express.json({ limit: "25mb" }));
-app.use(express.urlencoded({ extended: true, limit: "25mb" }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 /* Test route */
 app.get("/api", (req, res) => {
