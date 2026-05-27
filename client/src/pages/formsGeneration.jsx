@@ -63,9 +63,9 @@ function FormsGeneration() {
         setBeans(
           beanData.map((bean) => ({
             id: bean._id,
-            name: bean.beanName || bean.name,
+            name: bean.beanName || bean.name || "",
             pricePerUnit: Number(bean.pricePerUnit || bean.price || 0),
-            unit: bean.unit,
+            unit: bean.unit || "",
           }))
         );
       } catch (err) {
@@ -85,6 +85,8 @@ function FormsGeneration() {
 
   const getBeanById = (id) => beans.find((b) => b.id === id);
 
+  const farmerName = selectedFarmer?.name || "";
+
   const computedRows = rows.map((row) => {
     const bean = getBeanById(row.beanId);
     const unitCost = Number(bean?.pricePerUnit || 0);
@@ -93,7 +95,14 @@ function FormsGeneration() {
 
     return {
       ...row,
-      name: selectedFarmer?.name || "",
+      arNo: row.arNo || "",
+      beanId: row.beanId || "",
+      volume: row.volume || "",
+      paymentDT: row.paymentDT || "",
+      remarks2: row.remarks2 || "",
+      name: farmerName,
+      receiverName: form.receiverName || "",
+      payorName: form.payorName || "",
       particulars: bean?.name || "",
       unitCost,
       totalAmount,
@@ -335,20 +344,20 @@ function FormsGeneration() {
 
   const buildDocData = () => ({
     idNumber: selectedFarmer?.farmerID || "",
-    name: selectedFarmer?.name || "",
+    name: farmerName,
     sex: selectedFarmer?.sex || "",
     age: selectedFarmer?.age || "",
     residentialAddress: selectedFarmer?.residentialAddress || "",
     farmAddress: selectedFarmer?.farmAddress || "",
     contactNumber: selectedFarmer?.contactNumber || "",
     emailAddress: selectedFarmer?.emailAddress || "",
-    deliveryDT: form.deliveryDT,
-    beanOrigin: form.beanOrigin,
-    beanAltitude: form.beanAltitude,
-    remarks: form.remarks,
-    receiverName: form.receiverName,
-    payorName: form.payorName,
-    amountInFigures: grandTotal,
+    deliveryDT: form.deliveryDT || "",
+    beanOrigin: form.beanOrigin || "",
+    beanAltitude: form.beanAltitude || "",
+    remarks: form.remarks || "",
+    receiverName: form.receiverName || "",
+    payorName: form.payorName || "",
+    amountInFigures: grandTotal || 0,
     amountInWords: amountToWords(grandTotal),
     rows: computedRows,
   });
