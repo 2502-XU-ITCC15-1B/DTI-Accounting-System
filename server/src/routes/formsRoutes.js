@@ -73,8 +73,23 @@ router.post("/print", async (req, res) => {
       }
     );
   } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).send("Error generating document");
+    console.error("FULL DOCX ERROR:", err);
+
+    if (err.properties && err.properties.errors) {
+      console.error(
+        "Template Errors:",
+        err.properties.errors.map((e) => ({
+          id: e.properties.id,
+          explanation: e.properties.explanation,
+        }))
+      );
+    }
+
+    res.status(500).json({
+      message: "Error generating document",
+      error: err.message,
+      details: err.properties?.errors || null,
+    });
   }
 });
 

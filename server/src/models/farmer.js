@@ -54,7 +54,6 @@ const farmerSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      lowercase: true,
     },
 
     beans: [
