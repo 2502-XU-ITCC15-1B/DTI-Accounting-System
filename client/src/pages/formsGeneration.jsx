@@ -93,6 +93,7 @@ function FormsGeneration() {
 
     return {
       ...row,
+      name: selectedFarmer?.name || "",
       particulars: bean?.name || "",
       unitCost,
       totalAmount,
